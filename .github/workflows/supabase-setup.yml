@@ -54,7 +54,12 @@ jobs:
               mk() { curl -s "${H[@]}" -X POST "$API/projects" -d "$(jq -n --arg o "$ORG" --arg p "$PASS" --arg f "$1" '{name: "bustas", region: "eu-central-1", db_pass: $p} + {($f): $o}')"; }
               resp=$(mk organization_slug)
               REF=$(echo "$resp" | jq -r '.ref // .id // empty')
-              if [ -z "$REF" ]; then resp=$(mk organization_id); REF=$(echo "$resp" | jq -r '.ref // .id // empty'); fi
+              if [ -z "$REF" ]; then
+                log "Bandymas 1 (organization_slug): $(echo "$resp" | jq -c '.' 2>/dev/null | cut -c1-300 || echo "$resp" | cut -c1-300)"
+                resp=$(mk organization_id); REF=$(echo "$resp" | jq -r '.ref // .id // empty')
+                [ -n "$REF" ] || log "Bandymas 2 (organization_id): $(echo "$resp" | jq -c '.' 2>/dev/null | cut -c1-300 || echo "$resp" | cut -c1-300)"
+              fi
+              [ -n "$REF" ] || log "Organizacija: $(curl -s "${H[@]}" "$API/organizations/$ORG" | jq -c '{name, plan, opt_in_tags} // .' | cut -c1-200)"
               [ -n "$REF" ] || { log "KLAIDA: projekto sukurti nepavyko: $(echo "$resp" | jq -c '.message // .' | cut -c1-300)"; return; }
               log "Sukurtas Supabase projektas „bustas“ (Frankfurtas)"
             else
