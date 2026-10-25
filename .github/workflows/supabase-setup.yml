@@ -41,12 +41,20 @@ jobs:
             projects=$(cat projects.json)
             REF=$(echo "$projects" | jq -r '[.[] | select(.name | test("bustas|slenkstis|xillilas"; "i"))][0].id // empty')
             if [ -z "$REF" ]; then
-              ORG=$(curl -s "${H[@]}" "$API/organizations" | jq -r '.[0].id // empty')
-              [ -n "$ORG" ] || { log "KLAIDA: Supabase paskyroje nėra organizacijos"; return; }
+              orgs=$(curl -s "${H[@]}" "$API/organizations")
+              ORG=$(echo "$orgs" | jq -r 'if type == "array" then (.[0] | (.slug // .id)) // empty else empty end')
+              if [ -z "$ORG" ]; then
+                echo "$orgs" | jq -e 'type == "array"' >/dev/null 2>&1 || { log "KLAIDA: nepavyko gauti organizacijų: $(echo "$orgs" | jq -c '.message // .' | cut -c1-200)"; return; }
+                o=$(curl -s "${H[@]}" -X POST "$API/organizations" -d '{"name":"bustas"}')
+                ORG=$(echo "$o" | jq -r '(.slug // .id) // empty')
+                [ -n "$ORG" ] || { log "KLAIDA: organizacijos sukurti nepavyko: $(echo "$o" | jq -c '.message // .' | cut -c1-200)"; return; }
+                log "Sukurta Supabase organizacija „bustas“"
+              fi
               PASS=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 32)
-              resp=$(curl -s "${H[@]}" -X POST "$API/projects" \
-                -d "$(jq -n --arg o "$ORG" --arg p "$PASS" '{name: "bustas", organization_id: $o, region: "eu-central-1", db_pass: $p}')")
-              REF=$(echo "$resp" | jq -r '.id // empty')
+              mk() { curl -s "${H[@]}" -X POST "$API/projects" -d "$(jq -n --arg o "$ORG" --arg p "$PASS" --arg f "$1" '{name: "bustas", region: "eu-central-1", db_pass: $p} + {($f): $o}')"; }
+              resp=$(mk organization_slug)
+              REF=$(echo "$resp" | jq -r '.ref // .id // empty')
+              if [ -z "$REF" ]; then resp=$(mk organization_id); REF=$(echo "$resp" | jq -r '.ref // .id // empty'); fi
               [ -n "$REF" ] || { log "KLAIDA: projekto sukurti nepavyko: $(echo "$resp" | jq -c '.message // .' | cut -c1-300)"; return; }
               log "Sukurtas Supabase projektas „bustas“ (Frankfurtas)"
             else
