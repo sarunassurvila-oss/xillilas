@@ -27,10 +27,18 @@ jobs:
           }
           main() {
             [ -n "${SUPABASE_TOKEN:-}" ] || { log "KLAIDA: GitHub'e nėra slapto rakto SUPABASE_TOKEN"; return; }
+            SUPABASE_TOKEN=$(printf '%s' "$SUPABASE_TOKEN" | tr -d '[:space:]')
+            case "$SUPABASE_TOKEN" in sbp_*) ;; *) log "ĮSPĖJIMAS: raktas neprasideda „sbp_“ (ilgis ${#SUPABASE_TOKEN} simb.)";; esac
             API=https://api.supabase.com/v1
             H=(-H "Authorization: Bearer $SUPABASE_TOKEN" -H "Content-Type: application/json")
 
-            projects=$(curl -sf "${H[@]}" "$API/projects") || { log "KLAIDA: Supabase raktas netinka arba pasibaigęs"; return; }
+            code=$(curl -s -o projects.json -w '%{http_code}' "${H[@]}" "$API/projects")
+            if [ "$code" != 200 ]; then
+              log "KLAIDA: Supabase atsakė HTTP $code: $(jq -r '.message // .error // empty' projects.json 2>/dev/null | cut -c1-200)"
+              [ "$code" = 401 ] && log "Raktas netinka: patikrinkite, ar nukopijavote visą sbp_ raktą ir ar jis neatšauktas (Supabase → Account → Access Tokens)."
+              return
+            fi
+            projects=$(cat projects.json)
             REF=$(echo "$projects" | jq -r '[.[] | select(.name | test("bustas|slenkstis|xillilas"; "i"))][0].id // empty')
             if [ -z "$REF" ]; then
               ORG=$(curl -s "${H[@]}" "$API/organizations" | jq -r '.[0].id // empty')
