@@ -39,7 +39,7 @@ jobs:
               return
             fi
             projects=$(cat projects.json)
-            REF=$(echo "$projects" | jq -r '[.[] | select(.name | test("bustas|slenkstis|xillilas"; "i"))][0].id // empty')
+            REF=$(echo "$projects" | jq -r '([.[] | select(.name | test("bustas|slenkstis|xil"; "i"))][0] // (if length == 1 then .[0] else null end)) | if . == null then empty else (.ref // .id) end')
             if [ -z "$REF" ]; then
               orgs=$(curl -s "${H[@]}" "$API/organizations")
               ORG=$(echo "$orgs" | jq -r 'if type == "array" then (.[0] | (.slug // .id)) // empty else empty end')
@@ -63,7 +63,7 @@ jobs:
               [ -n "$REF" ] || { log "KLAIDA: projekto sukurti nepavyko: $(echo "$resp" | jq -c '.message // .' | cut -c1-300)"; return; }
               log "Sukurtas Supabase projektas „bustas“ (Frankfurtas)"
             else
-              log "Rastas esamas Supabase projektas ($REF)"
+              log "Rastas Supabase projektas: $(echo "$projects" | jq -r --arg r "$REF" '.[] | select((.ref // .id) == $r) | .name + " (" + .region + ")"')"
             fi
 
             st=""
