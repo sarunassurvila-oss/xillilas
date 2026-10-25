@@ -2,13 +2,14 @@ import type { Metadata, Viewport } from 'next'
 import { Bricolage_Grotesque, Figtree } from 'next/font/google'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { SITE } from '@/lib/site'
 import './globals.css'
 
 const display = Bricolage_Grotesque({ subsets: ['latin', 'latin-ext'], variable: '--font-display-face', display: 'swap' })
 const body = Figtree({ subsets: ['latin', 'latin-ext'], variable: '--font-body-face', display: 'swap' })
 
 export const metadata: Metadata = {
-  title: { default: 'Slenkstis – butai, namai ir sklypai visoje Lietuvoje', template: '%s | Slenkstis' },
+  title: { default: `${SITE.name} – butai, namai ir sklypai visoje Lietuvoje`, template: `%s | ${SITE.name}` },
   description: 'Nekilnojamojo turto skelbimai: butai, namai, sklypai, patalpos ir garažai pardavimui bei nuomai visoje Lietuvoje.',
 }
 

@@ -1,6 +1,6 @@
 // Prieš paleidžiant svetainę viešai, įrašykite tikrus įmonės duomenis.
 export const SITE = {
-  name: 'Slenkstis',
+  name: 'bustas.lt',
   company: '[Įmonės pavadinimas]',
   companyCode: '[įmonės kodas]',
   address: '[buveinės adresas]',

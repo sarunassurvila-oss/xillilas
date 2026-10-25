@@ -1,4 +1,4 @@
-# Slenkstis
+# bustas.lt
 
 Nekilnojamojo turto skelbimų svetainė: butai, namai, sklypai, patalpos ir garažai pardavimui bei nuomai. Skelbėjai prisijungia su **Google** paskyra (be slaptažodžių) ir patys tvarko savo skelbimus.
 
@@ -62,9 +62,9 @@ Supabase → **Authentication** → **URL Configuration**:
 
 ### 3. Prisijungimas su Google
 
-1. [console.cloud.google.com](https://console.cloud.google.com) → sukurkite naują projektą „Slenkstis“.
+1. [console.cloud.google.com](https://console.cloud.google.com) → sukurkite naują projektą „bustas.lt“.
 2. **Google Auth Platform** → **Branding**:
-   - App name: `Slenkstis`, User support email: jūsų el. paštas
+   - App name: `bustas.lt`, User support email: jūsų el. paštas
    - Application home page: `https://jusu-domenas.lt`
    - Privacy policy: `https://jusu-domenas.lt/privatumas`, Terms of service: `https://jusu-domenas.lt/taisykles`
    - Authorized domains: `jusu-domenas.lt` ir `supabase.co`

@@ -6,6 +6,7 @@ import { LoginButtons } from '@/components/LoginButtons'
 import { SetupNotice } from '@/components/SetupNotice'
 import { isConfigured } from '@/lib/env'
 import { safeNext } from '@/lib/safe-next'
+import { SITE } from '@/lib/site'
 import { getSessionUser } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: 'Prisijungti', robots: { index: false } }
@@ -23,9 +24,9 @@ export default async function LoginPage({ searchParams }: Props) {
   return (
     <div className="wrap login">
       <div className="login-card">
-        <Link className="brand" href="/"><Logo />Slenkstis</Link>
+        <Link className="brand" href="/"><Logo />{SITE.name}</Link>
         <div>
-          <h1>{posting ? 'Prisijunkite ir įdėkite skelbimą' : 'Prisijunkite prie Slenksčio'}</h1>
+          <h1>{posting ? 'Prisijunkite ir įdėkite skelbimą' : `Prisijunkite prie ${SITE.name}`}</h1>
           <p style={{ marginTop: 8 }}>
             Nereikia kurti slaptažodžio. Prisijungę galėsite įdėti skelbimą, keisti kainą, pristabdyti ar pažymėti parduotu.
           </p>

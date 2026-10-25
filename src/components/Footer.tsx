@@ -1,12 +1,13 @@
 import Link from 'next/link'
 import { Logo } from '@/components/icons'
+import { SITE } from '@/lib/site'
 
 export function Footer() {
   return (
     <footer className="foot">
       <div className="wrap foot-in">
         <div className="foot-brand">
-          <Link className="brand" href="/"><Logo />Slenkstis</Link>
+          <Link className="brand" href="/"><Logo />{SITE.name}</Link>
           <p className="foot-note">Butų, namų, sklypų, patalpų ir garažų skelbimai visoje Lietuvoje. Skelbimus įdeda ir tvarko patys savininkai bei agentūros.</p>
         </div>
         <div>

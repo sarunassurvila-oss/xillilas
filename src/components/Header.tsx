@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { AccountMenu } from '@/components/AccountMenu'
 import { Icon, Logo } from '@/components/icons'
 import { isConfigured } from '@/lib/env'
+import { SITE } from '@/lib/site'
 import { getSessionUser } from '@/lib/supabase/server'
 
 const NAV = [
@@ -13,9 +14,9 @@ export async function Header() {
   return (
     <header className="top">
       <div className="wrap top-in">
-        <Link className="brand" href="/" aria-label="Slenkstis, į pradžią">
+        <Link className="brand" href="/" aria-label={`${SITE.name}, į pradžią`}>
           <Logo />
-          Slenkstis
+          {SITE.name}
         </Link>
         <nav className="main-nav" aria-label="Kategorijos">
           {NAV.map(([type, label]) => (
