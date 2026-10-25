@@ -101,8 +101,8 @@ jobs:
             URL="https://$REF.supabase.co"
 
             a=$(curl -s "${H[@]}" -X PATCH "$API/projects/$REF/config/auth" \
-              -d "$(jq -n --arg s "$SITE" '{site_url: $s, uri_allow_list: ($s + "/auth/callback,http://localhost:3000/auth/callback")}')")
-            if [ "$(echo "$a" | jq -r '.site_url // empty')" = "$SITE" ]; then log "Prisijungimo adresai nustatyti ($SITE)"; else log "ĮSPĖJIMAS: prisijungimo adresų nustatyti nepavyko: $(echo "$a" | jq -c '.message // .' | cut -c1-200)"; fi
+              -d "$(jq -n --arg s "$SITE" '{site_url: $s, uri_allow_list: ($s + "/auth/callback,http://localhost:3000/auth/callback"), external_email_enabled: false}')")
+            if [ "$(echo "$a" | jq -r '.site_url // empty')" = "$SITE" ]; then log "Prisijungimo adresai nustatyti ($SITE), registracija el. paštu išjungta: $([ "$(echo "$a" | jq -r '.external_email_enabled')" = false ] && echo taip || echo ne)"; else log "ĮSPĖJIMAS: prisijungimo adresų nustatyti nepavyko: $(echo "$a" | jq -c '.message // .' | cut -c1-200)"; fi
             GOOGLE_CLIENT_ID=$(printf '%s' "${GOOGLE_CLIENT_ID:-}" | tr -d '[:space:]')
             GOOGLE_CLIENT_SECRET=$(printf '%s' "${GOOGLE_CLIENT_SECRET:-}" | tr -d '[:space:]')
             if [ -n "$GOOGLE_CLIENT_ID" ] && [ -n "$GOOGLE_CLIENT_SECRET" ]; then
