@@ -1,0 +1,107 @@
+name: Supabase ir Vercel nustatymas
+on:
+  push:
+    branches: [claude/supabase-setup]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Nustatyti Supabase (ir Vercel, jei yra raktas)
+        env:
+          SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SITE: https://xillilas.vercel.app
+          VERCEL_PROJECT: xillilas
+          VERCEL_SCOPE: sarunassurvila-1289
+        run: |
+          set -uo pipefail
+          : > out.txt
+          log() { echo "$*" | tee -a out.txt; }
+          finish() {
+            body=$(sed -e 's/%/%25/g' out.txt | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            echo "::notice title=Nustatymas::$body"
+          }
+          main() {
+            [ -n "${SUPABASE_TOKEN:-}" ] || { log "KLAIDA: GitHub'e nėra slapto rakto SUPABASE_TOKEN"; return; }
+            API=https://api.supabase.com/v1
+            H=(-H "Authorization: Bearer $SUPABASE_TOKEN" -H "Content-Type: application/json")
+
+            projects=$(curl -sf "${H[@]}" "$API/projects") || { log "KLAIDA: Supabase raktas netinka arba pasibaigęs"; return; }
+            REF=$(echo "$projects" | jq -r '[.[] | select(.name | test("bustas|slenkstis|xillilas"; "i"))][0].id // empty')
+            if [ -z "$REF" ]; then
+              ORG=$(curl -s "${H[@]}" "$API/organizations" | jq -r '.[0].id // empty')
+              [ -n "$ORG" ] || { log "KLAIDA: Supabase paskyroje nėra organizacijos"; return; }
+              PASS=$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | head -c 32)
+              resp=$(curl -s "${H[@]}" -X POST "$API/projects" \
+                -d "$(jq -n --arg o "$ORG" --arg p "$PASS" '{name: "bustas", organization_id: $o, region: "eu-central-1", db_pass: $p}')")
+              REF=$(echo "$resp" | jq -r '.id // empty')
+              [ -n "$REF" ] || { log "KLAIDA: projekto sukurti nepavyko: $(echo "$resp" | jq -c '.message // .' | cut -c1-300)"; return; }
+              log "Sukurtas Supabase projektas „bustas“ (Frankfurtas)"
+            else
+              log "Rastas esamas Supabase projektas ($REF)"
+            fi
+
+            st=""
+            for i in $(seq 1 60); do
+              st=$(curl -s "${H[@]}" "$API/projects/$REF" | jq -r '.status // empty')
+              [ "$st" = ACTIVE_HEALTHY ] && break
+              sleep 10
+            done
+            [ "$st" = ACTIVE_HEALTHY ] || { log "KLAIDA: projektas dar neparuoštas (būsena: $st). Paleiskite dar kartą po kelių minučių."; return; }
+
+            q() { curl -s "${H[@]}" -X POST "$API/projects/$REF/database/query" -d "$(jq -n --arg q "$1" '{query: $q}')"; }
+            exists=""
+            for i in $(seq 1 18); do
+              exists=$(q "select to_regclass('public.listings') is not null as e" | jq -r 'if type == "array" then (.[0].e | tostring) else empty end')
+              [ -n "$exists" ] && break
+              sleep 10
+            done
+            if [ "$exists" = true ]; then
+              log "Duomenų bazės schema jau įdiegta"
+            else
+              r=$(jq -Rs '{query: .}' supabase/migrations/0001_init.sql | curl -s "${H[@]}" -X POST "$API/projects/$REF/database/query" --data-binary @-)
+              if echo "$r" | jq -e 'type == "array"' >/dev/null 2>&1; then
+                log "Duomenų bazės schema įdiegta"
+              else
+                log "KLAIDA: schemos įdiegti nepavyko: $(echo "$r" | jq -c '.message // .' | cut -c1-400)"; return
+              fi
+            fi
+
+            keys=$(curl -s "${H[@]}" "$API/projects/$REF/api-keys")
+            PUB=$(echo "$keys" | jq -r '[.[] | select(.type == "publishable")][0].api_key // empty')
+            [ -n "$PUB" ] || PUB=$(echo "$keys" | jq -r '[.[] | select(.name == "anon")][0].api_key // empty')
+            [ -n "$PUB" ] || { log "KLAIDA: nerastas viešasis (publishable) raktas"; return; }
+            URL="https://$REF.supabase.co"
+
+            a=$(curl -s "${H[@]}" -X PATCH "$API/projects/$REF/config/auth" \
+              -d "$(jq -n --arg s "$SITE" '{site_url: $s, uri_allow_list: ($s + "/auth/callback,http://localhost:3000/auth/callback")}')")
+            if [ "$(echo "$a" | jq -r '.site_url // empty')" = "$SITE" ]; then log "Prisijungimo adresai nustatyti ($SITE)"; else log "ĮSPĖJIMAS: prisijungimo adresų nustatyti nepavyko: $(echo "$a" | jq -c '.message // .' | cut -c1-200)"; fi
+            g=$(echo "$a" | jq -r '.external_google_enabled // false')
+            log "Google prisijungimas Supabase: $([ "$g" = true ] && echo įjungtas || echo dar neįjungtas)"
+
+            log "NEXT_PUBLIC_SUPABASE_URL=$URL"
+            log "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUB"
+            log "Google redirect URI: $URL/auth/v1/callback"
+
+            if [ -z "${VERCEL_TOKEN:-}" ]; then
+              log "Vercel: rakto nėra – šias dvi reikšmes įrašykite Vercel → Settings → Environment Variables ir paspauskite Redeploy"
+              return
+            fi
+            V=https://api.vercel.com
+            VH=(-H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json")
+            body=$(jq -n --arg u "$URL" --arg k "$PUB" '[
+              {key: "NEXT_PUBLIC_SUPABASE_URL", value: $u, type: "plain", target: ["production", "preview", "development"]},
+              {key: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", value: $k, type: "plain", target: ["production", "preview", "development"]}]')
+            e=$(curl -s "${VH[@]}" -X POST "$V/v10/projects/$VERCEL_PROJECT/env?upsert=true&slug=$VERCEL_SCOPE" -d "$body")
+            if echo "$e" | jq -e '.error' >/dev/null 2>&1; then log "KLAIDA Vercel raktuose: $(echo "$e" | jq -r '.error.message' | cut -c1-200)"; return; fi
+            log "Vercel: Supabase raktai įrašyti"
+            d=$(curl -s "${VH[@]}" -X POST "$V/v13/deployments?slug=$VERCEL_SCOPE" \
+              -d '{"name":"xillilas","project":"xillilas","target":"production","gitSource":{"type":"github","org":"sarunassurvila-oss","repo":"xillilas","ref":"main"}}')
+            if echo "$d" | jq -e '.id' >/dev/null 2>&1; then log "Vercel: paleistas naujas paskelbimas (užtruks 1–2 min.)"; else log "KLAIDA Vercel paskelbime: $(echo "$d" | jq -r '.error.message // .' | cut -c1-200)"; fi
+          }
+          main
+          finish
