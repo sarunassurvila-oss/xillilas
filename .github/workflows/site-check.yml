@@ -10,13 +10,14 @@ jobs:
       - name: Patikrinti svetainę, Supabase ir Google
         run: |
           set -u
+          {
           SITE=""
           for s in https://xillilas.vercel.app https://xillilas-sarunassurvila-1289.vercel.app; do
             c=$(curl -s -o /dev/null -w '%{http_code}' "$s/")
             echo "$s -> HTTP $c"
             if [ "$c" = 200 ] && [ -z "$SITE" ]; then SITE=$s; fi
           done
-          [ -z "$SITE" ] && { echo "REZULTATAS: svetainė nepasiekiama"; exit 0; }
+          if [ -z "$SITE" ]; then echo "REZULTATAS: svetainė nepasiekiama"; else
           echo "SITE=$SITE"
 
           echo "== 1. Pradžios puslapis =="
@@ -56,3 +57,8 @@ jobs:
               grep -oE 'redirect_uri_mismatch|invalid_client|deleted_client|disabled_client|Access blocked|Error 400[^<]{0,60}|Error 401[^<]{0,60}' g.html | sort -u | head -5
             fi
           fi
+          fi
+          } > out.txt 2>&1
+          cat out.txt
+          body=$(sed -e 's/%/%25/g' out.txt | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=Patikra::$body"
