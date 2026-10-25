@@ -1,0 +1,58 @@
+name: Svetainės patikra
+on:
+  push:
+    branches: [claude/site-check]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Patikrinti svetainę, Supabase ir Google
+        run: |
+          set -u
+          SITE=""
+          for s in https://xillilas.vercel.app https://xillilas-sarunassurvila-1289.vercel.app; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' "$s/")
+            echo "$s -> HTTP $c"
+            if [ "$c" = 200 ] && [ -z "$SITE" ]; then SITE=$s; fi
+          done
+          [ -z "$SITE" ] && { echo "REZULTATAS: svetainė nepasiekiama"; exit 0; }
+          echo "SITE=$SITE"
+
+          echo "== 1. Pradžios puslapis =="
+          curl -s -o home.html "$SITE/"
+          grep -o '<title>[^<]*' home.html | head -1
+          grep -q 'Supabase dar neprijungtas' home.html && echo "BUSENA1: SUPABASE_NEPRIJUNGTAS"
+          grep -q 'Nepavyko įkelti skelbimų' home.html && echo "BUSENA1: DB_KLAIDA"
+          grep -q 'Skelbimų dar nėra' home.html && echo "BUSENA1: DB_VEIKIA_SKELBIMU_NERA"
+          echo "Kortelių: $(grep -o 'class="card"' home.html | wc -l)"
+
+          echo "== 2. Supabase =="
+          curl -s -o login.html "$SITE/prisijungti"
+          grep -q 'Tęsti su Google' login.html && echo "Prisijungimo mygtukas: yra"
+          for js in $(cat home.html login.html | grep -oE '/_next/static/[^"]+\.js' | sort -u); do curl -s "$SITE$js"; done > bundle.js
+          URL=$(grep -oE 'https://[a-z0-9]{20}\.supabase\.co' bundle.js | head -1)
+          KEY=$(grep -oE 'sb_publishable_[A-Za-z0-9_-]+' bundle.js | head -1)
+          [ -z "$KEY" ] && KEY=$(grep -oE 'eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' bundle.js | head -1)
+          echo "Supabase URL: ${URL:-NERASTAS}"
+          [ -n "$KEY" ] && echo "Raktas: rastas" || echo "Raktas: NERASTAS"
+          if [ -n "$URL" ] && [ -n "$KEY" ]; then
+            echo "-- Lentelė listings:"
+            curl -s -o t.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/listings?select=id&limit=1" -H "apikey: $KEY"; head -c 200 t.json; echo
+            echo "-- Funkcija listing_type_counts:"
+            curl -s -o f.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/rpc/listing_type_counts?p_deal=sale" -H "apikey: $KEY"; head -c 200 f.json; echo
+            echo "-- Prisijungimo tiekėjai:"
+            curl -s "$URL/auth/v1/settings" -H "apikey: $KEY" | grep -oE '"(google|email)":(true|false)' | tr '\n' ' '; echo
+
+            echo "== 3. Google =="
+            loc=$(curl -s -o a.txt -w '%{redirect_url}' "$URL/auth/v1/authorize?provider=google&redirect_to=$SITE/auth/callback")
+            echo "Supabase nukreipia į: $(echo "$loc" | cut -c1-60)"
+            head -c 200 a.txt; echo
+            if echo "$loc" | grep -q accounts.google.com; then
+              echo "client_id: $(echo "$loc" | grep -oE 'client_id=[^&]+' | cut -c1-40)…"
+              echo "redirect_uri: $(echo "$loc" | grep -oE 'redirect_uri=[^&]+')"
+              g=$(curl -s -o g.html -w '%{http_code} %{redirect_url}' -A 'Mozilla/5.0' "$loc")
+              echo "Google atsakas: $(echo "$g" | cut -c1-90)"
+              grep -oE 'redirect_uri_mismatch|invalid_client|deleted_client|disabled_client|Access blocked|Error 400[^<]{0,60}|Error 401[^<]{0,60}' g.html | sort -u | head -5
+            fi
+          fi
