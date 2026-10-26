@@ -38,6 +38,15 @@ jobs:
           done
           echo "Mygtukas „Išsami paieška“ pradžioje: $(grep -q 'Išsami paieška' home.html && echo yra || echo NĖRA)"
 
+          echo "== Žemėlapis =="
+          curl -s -o map.html "$SITE/?view=map"
+          echo "?view=map: $(grep -q 'Nepavyko įkelti skelbimų' map.html && echo KLAIDA || echo gerai), žemėlapio blokas: $(grep -q 'class="lmap"' map.html && echo yra || echo NĖRA), pastaba: $(grep -oE 'Žemėlapyje [^<]{0,90}' map.html | head -1)"
+          V=$(grep -oE 'maplibre-gl-[0-9]+\.[0-9]+\.[0-9]+' bundle.js map.html 2>/dev/null | head -1 | sed 's/.*maplibre-gl-//'); V=${V:-6.14.0}
+          for f in maplibre-gl.mjs maplibre-gl-worker.mjs; do echo "vendor/$f: $(curl -s -o /dev/null -w '%{http_code} %{content_type} %{size_download}B' "$SITE/vendor/maplibre-gl-$V/$f")"; done
+          echo "OpenFreeMap stilius: $(curl -s -o style.json -w '%{http_code}' https://tiles.openfreemap.org/styles/positron) ($(jq -r '.sources | keys | join(",")' style.json 2>/dev/null))"
+          ID=$(grep -oE '/skelbimas/[0-9]+' home.html | head -1)
+          [ -n "$ID" ] && echo "Skelbimo $ID vietos žemėlapis: $(curl -s "$SITE$ID" | grep -q 'Vieta žemėlapyje' && echo yra || echo nėra)"
+
           echo "== Paleidimui =="
           echo "robots.txt: $(curl -s -o /dev/null -w '%{http_code}' "$SITE/robots.txt"), sitemap.xml: $(curl -s -o sm.xml -w '%{http_code}' "$SITE/sitemap.xml") ($(grep -o '<loc>' sm.xml | wc -l) adresai, skelbimų: $(grep -o '/skelbimas/' sm.xml | wc -l))"
           echo "og:image: $(grep -oE 'property="og:image" content="[^"]+' home.html | sed 's/.*content="//' | head -1) -> $(curl -s -o /dev/null -w '%{http_code}' "$SITE/og.png")"
@@ -82,3 +91,26 @@ jobs:
           body=$(sed -e 's/%/%25/g' out.txt | sed -e ':a;N;$!ba;s/\n/%0A/g')
           echo "::notice title=Patikra::$body"
 
+      - name: Žemėlapis tikroje naršyklėje
+        run: |
+          set +e
+          npm i -s --no-save playwright-core@1.56.1 >/dev/null 2>&1
+          cat > m.mjs <<'JS'
+          import { chromium } from 'playwright-core'
+          const b = await chromium.launch({ channel: 'chrome' })
+          const p = await b.newPage({ viewport: { width: 1280, height: 900 } })
+          const errs = []
+          p.on('pageerror', (e) => errs.push(e.message))
+          p.on('console', (m) => m.type() === 'error' && errs.push(m.text()))
+          await p.goto('https://xillilas.vercel.app/?view=map#rezultatai', { waitUntil: 'networkidle' })
+          const canvas = await p.locator('.lmap canvas').count()
+          await p.waitForTimeout(4000)
+          const prices = await p.locator('.mk-price').count(), clusters = await p.locator('.mk-cluster').count()
+          const tiles = await p.evaluate(() => performance.getEntriesByType('resource').filter((r) => r.name.includes('openfreemap')).length)
+          let popup = '-'
+          if (prices) { await p.locator('.mk-price').first().click(); await p.waitForTimeout(600); popup = await p.locator('.mpop').getAttribute('href').catch(() => 'nėra') }
+          console.log(`::notice title=Zemelapis::canvas ${canvas}, kainų žymės ${prices}, grupės ${clusters}, OpenFreeMap užklausų ${tiles}, langelis ${popup}, klaidos: ${errs.filter((e) => !/insights/.test(e)).join(' | ').slice(0, 300) || 'nėra'}`)
+          await b.close()
+          JS
+          sed -i 's/^          //' m.mjs
+          node m.mjs || echo "::notice title=Zemelapis::naršyklės patikra nepavyko"
