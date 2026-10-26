@@ -110,7 +110,13 @@ jobs:
           const tiles = await p.evaluate(() => performance.getEntriesByType('resource').filter((r) => r.name.includes('openfreemap')).length)
           let popup = '-'
           if (prices) { await p.locator('.mk-price').first().click(); await p.waitForTimeout(600); popup = await p.locator('.mpop').getAttribute('href').catch(() => 'nėra') }
-          console.log(`::notice title=Zemelapis::canvas ${canvas}, kainų žymės ${prices}, grupės ${clusters}, OpenFreeMap užklausų ${tiles}, langelis ${popup}, klaidos: ${errs.filter((e) => !/insights/.test(e)).join(' | ').slice(0, 300) || 'nėra'}`)
+          const head = await p.locator('.maplist-head').innerText().catch(() => '-')
+          const cards = await p.locator('.mcard').count()
+          const gmaps = await p.locator('.mpop-gmaps').getAttribute('href').catch(() => '-')
+          const d = await b.newPage({ viewport: { width: 1280, height: 900 } })
+          await d.goto('https://xillilas.vercel.app/?city=Vilnius', { waitUntil: 'load' })
+          await d.click('.dp-btn'); const dn = await d.locator('.dp-list label').count()
+          console.log(`::notice title=Zemelapis::canvas ${canvas}, kainų žymės ${prices}, grupės ${clusters}, OpenFreeMap užklausų ${tiles}, langelis ${popup}, Google Maps ${gmaps}, sąrašas: „${head}“ (${cards} kort.), Vilniaus mikrorajonų sąraše: ${dn}, klaidos: ${errs.filter((e) => !/insights/.test(e)).join(' | ').slice(0, 300) || 'nėra'}`)
           await b.close()
           JS
           sed -i 's/^          //' m.mjs
