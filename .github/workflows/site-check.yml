@@ -28,7 +28,7 @@ jobs:
           grep -q 'Skelbimų dar nėra' home.html && echo "BUSENA1: DB_VEIKIA_SKELBIMU_NERA"
           echo "Kortelių: $(grep -o 'class="card"' home.html | wc -l)"
           echo "Kainų lentelė: $(grep -q 'Butų kainos miestuose' home.html && echo yra || echo NĖRA); miestai: $(grep -oE '(Vilnius|Kaunas|Klaipėda|Panevėžys|Šiauliai|Alytus)</a>' home.html | sed 's#</a>##' | tr '\n' ' ')"
-          echo "Kainos: $(LC_ALL=C.UTF-8 grep -oP '\d[\d\x{00A0}\x{202F} ]*\d €/m²' home.html | LC_ALL=C.UTF-8 sed 's/[^0-9€/m²]//g' | sort -u | tr '\n' ' ')"
+          echo "Kainos: $(for n in 3290 4314 3046 2776 1835 1804 1546; do a=${n:0:1}; b=${n:1}; LC_ALL=C.UTF-8 grep -qP "${a}[\x{00A0}\x{202F} ]${b}" home.html && printf '%s✓ ' $n || printf '%s✗ ' $n; done)"
 
           echo "== 2. Supabase =="
           curl -s -o login.html "$SITE/prisijungti"
