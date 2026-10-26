@@ -13,7 +13,8 @@ export type Filters = {
   deal: Deal
   type: ListingType | 'all'
   city: string
-  district: string
+  /** Pasirinkti mikrorajonai (taikoma tik pasirinkus miestą). */
+  districts: string[]
   q: string
   pmin: number | null
   pmax: number | null
@@ -92,6 +93,9 @@ export const roomsApply = (type: Filters['type']) => type === 'all' || type === 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? ''
 const list = (v: string | string[] | undefined, allowed: string[]) =>
   [...new Set((Array.isArray(v) ? v : one(v).split(',')).map((x) => x.trim()).filter((x) => allowed.includes(x)))]
+/** Laisvo teksto sąrašas iš URL („a,b“ arba pakartoti parametrai), pvz. mikrorajonai. */
+const many = (v: string | string[] | undefined, max = 30) =>
+  [...new Set((Array.isArray(v) ? v : one(v).split(',')).map((x) => x.trim().slice(0, 80)).filter(Boolean))].slice(0, max)
 const numOrNull = (v: string) => {
   const n = Number(v.replace(/\s/g, '').replace(',', '.'))
   return v.trim() && Number.isFinite(n) && n >= 0 ? n : null
@@ -106,7 +110,7 @@ export function parseFilters(sp: SearchParams): Filters {
     deal: one(sp.deal) === 'rent' ? 'rent' : 'sale',
     type: TYPE_KEYS.includes(type) ? type : 'all',
     city: one(sp.city).trim().slice(0, 80),
-    district: one(sp.district).trim().slice(0, 80),
+    districts: many(sp.district),
     q: one(sp.q).trim().slice(0, 80),
     pmin: numOrNull(one(sp.pmin)),
     pmax: numOrNull(one(sp.pmax)),
@@ -143,7 +147,7 @@ export function toQuery(f: Partial<Filters>) {
   if (f.deal === 'rent') p.set('deal', 'rent')
   if (f.type && f.type !== 'all') p.set('type', f.type)
   if (f.city) p.set('city', f.city)
-  if (f.city && f.district) p.set('district', f.district)
+  if (f.city && f.districts?.length) p.set('district', f.districts.join(','))
   if (f.q) p.set('q', f.q)
   if (f.pmin != null) p.set('pmin', String(f.pmin))
   if (f.pmax != null) p.set('pmax', String(f.pmax))

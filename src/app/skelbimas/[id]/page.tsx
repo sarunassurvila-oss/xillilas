@@ -10,6 +10,7 @@ import { PointMap } from '@/components/PointMap'
 import { SetupNotice } from '@/components/SetupNotice'
 import { isConfigured } from '@/lib/env'
 import { hrefFor } from '@/lib/filters'
+import { googleMapsUrl } from '@/lib/geo'
 import {
   TYPES, addrOf, daysLabel, daysSince, effectiveStatus, fmt, fmt1, fullTitle, photoUrl, priceLabel, statusLabel, unitLabel,
   type Listing,
@@ -158,7 +159,10 @@ export default async function ListingPage({ params }: Props) {
             <>
               <h2>Vieta žemėlapyje</h2>
               <PointMap lat={l.lat} lng={l.lng} />
-              <p className="hint">{addrOf(l)}. Vieta gali būti nurodyta apytiksliai.</p>
+              <p className="hint">
+                {addrOf(l)}. Vieta gali būti nurodyta apytiksliai.{' '}
+                <a href={googleMapsUrl(l.lat, l.lng)} target="_blank" rel="noopener noreferrer">Atidaryti Google Maps ↗</a>
+              </p>
             </>
           )}
         </div>

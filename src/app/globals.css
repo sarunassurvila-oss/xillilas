@@ -429,11 +429,34 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .maplibregl-popup-content { padding: 0; border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow) }
 .maplibregl-popup-tip { border-top-color: var(--surface) !important; border-bottom-color: var(--surface) !important }
 .maplibregl-popup-close-button { width: 28px; height: 28px; font-size: 20px; color: #fff; background: rgb(0 0 0 / .45); border-radius: 0 0 0 10px; z-index: 1 }
-.mpop { display: grid; color: var(--ink); text-decoration: none; width: 260px }
-.mpop img { width: 100%; height: 140px; object-fit: cover; display: block }
-.mpop div { display: grid; gap: 3px; padding: 10px 12px 12px }
+.mpop { display: grid; width: 260px }
+.mpop-main { display: grid; color: var(--ink); text-decoration: none }
+.mpop-main img { width: 100%; height: 140px; object-fit: cover; display: block }
+.mpop-main div { display: grid; gap: 3px; padding: 10px 12px 10px }
 .mpop b { font: 700 17px var(--font-display) }
 .mpop span { font-weight: 600; font-size: 14px }
 .mpop small { color: var(--ink-3); font-size: 12.5px }
-.mpop:hover span { color: var(--link) }
+.mpop-main:hover span { color: var(--link) }
+.mpop-gmaps { border-top: 1px solid var(--line); padding: 9px 12px; font: 600 13.5px var(--font-body); color: var(--link); text-decoration: none }
+.mpop-gmaps:hover { background: var(--surface-2) }
 @media (max-width: 640px) { .lmap { height: 72vh } .res-tools { width: 100% } }
+
+/* Kelių mikrorajonų pasirinkimas */
+.dpick { position: relative; min-width: 0 }
+.dp-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); font: 15px var(--font-body); text-align: left; cursor: pointer }
+.dp-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dp-btn .ico { width: 18px; height: 18px; flex: none; color: var(--ink-2); transition: transform .15s }
+.dp-btn[aria-expanded="true"] .ico { transform: rotate(180deg) }
+.dp-btn:disabled { opacity: .6; cursor: not-allowed }
+.dp-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent }
+.dp-muted { color: var(--ink-3) }
+.dp-btn:not(:disabled) .dp-muted { color: var(--ink) }
+.dp-panel { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: max(100%, 300px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 10px; display: grid; gap: 8px }
+.dp-search { height: 40px }
+.dp-list { max-height: 290px; overflow-y: auto; display: grid; gap: 2px; overscroll-behavior: contain }
+.dp-list label { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 15px }
+.dp-list label:hover { background: var(--surface-2) }
+.dp-list input { width: 18px; height: 18px; flex: none; padding: 0; accent-color: var(--brand) }
+.dp-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding-top: 8px }
+.dp-foot .btn { height: 38px; padding: 0 16px }
+@media (max-width: 460px) { .dp-panel { width: 100% } }

@@ -12,3 +12,6 @@ export function shortPrice(price: number, deal: 'sale' | 'rent') {
   if (price >= 1_000_000) return `${new Intl.NumberFormat('lt-LT', { maximumFractionDigits: 1 }).format(price / 1_000_000)} mln. €`
   return `${new Intl.NumberFormat('lt-LT').format(Math.round(price))} €`
 }
+
+/** Nuoroda į Google Maps (telefone atsidaro programėlė). */
+export const googleMapsUrl = (lat: number, lng: number) => `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lng}`

@@ -3,7 +3,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef, useState } from 'react'
 import Supercluster from 'supercluster'
-import { shortPrice } from '@/lib/geo'
+import { googleMapsUrl, shortPrice } from '@/lib/geo'
 import { loadMapLibre, mapOptions } from '@/lib/map'
 
 export type MapPoint = {
@@ -19,8 +19,10 @@ export type MapPoint = {
 
 /** Iššokantis langelis kuriamas iš DOM elementų (textContent), todėl skelbėjų tekstas negali įterpti HTML. */
 function popupContent(p: MapPoint) {
+  const box = document.createElement('div')
+  box.className = 'mpop'
   const a = document.createElement('a')
-  a.className = 'mpop'
+  a.className = 'mpop-main'
   a.href = `/skelbimas/${p.id}`
   if (p.photo) {
     const img = document.createElement('img')
@@ -37,7 +39,14 @@ function popupContent(p: MapPoint) {
   addr.textContent = p.addr
   body.append(price, title, addr)
   a.append(body)
-  return a
+  const g = document.createElement('a')
+  g.className = 'mpop-gmaps'
+  g.href = googleMapsUrl(p.lat, p.lng)
+  g.target = '_blank'
+  g.rel = 'noopener noreferrer'
+  g.textContent = 'Atidaryti Google Maps ↗'
+  box.append(a, g)
+  return box
 }
 
 export function ListingsMap({ points }: { points: MapPoint[] }) {

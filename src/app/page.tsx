@@ -41,7 +41,7 @@ function queryListings(supabase: Supabase, f: Filters, mode: 'list' | 'map' = 'l
     .eq('deal', f.deal)
   if (f.type !== 'all') q = q.eq('type', f.type)
   if (f.city) q = q.eq('city', f.city)
-  if (f.city && f.district) q = q.eq('district', f.district)
+  if (f.city && f.districts.length) q = q.in('district', f.districts)
   if (f.pmin != null) q = q.gte('price', f.pmin)
   if (f.pmax != null) q = q.lte('price', f.pmax)
   const areaCol = f.type === 'sklypas' ? 'area' : 'area_m2'
@@ -94,8 +94,8 @@ function chipsFor(f: Filters) {
   const unitP = f.deal === 'rent' ? '€/mėn.' : '€', unitA = f.type === 'sklypas' ? 'a' : 'm²'
   const range = (lbl: string, a: number | null, b: number | null, u: string) =>
     a != null && b != null ? `${lbl} ${fmt(a)}–${fmt(b)} ${u}` : a != null ? `${lbl} nuo ${fmt(a)} ${u}` : `${lbl} iki ${fmt(b!)} ${u}`
-  if (f.city) c.push({ label: f.city, href: hrefFor({ ...f, city: '', district: '', page: 1 }) })
-  if (f.city && f.district) c.push({ label: f.district, href: hrefFor({ ...f, district: '', page: 1 }) })
+  if (f.city) c.push({ label: f.city, href: hrefFor({ ...f, city: '', districts: [], page: 1 }) })
+  if (f.city) for (const d of f.districts) c.push({ label: d, href: hrefFor({ ...f, districts: f.districts.filter((x) => x !== d), page: 1 }) })
   if (f.q) c.push({ label: `„${f.q}“`, href: hrefFor({ ...f, q: '', page: 1 }) })
   if (f.pmin != null || f.pmax != null) c.push({ label: range('Kaina', f.pmin, f.pmax, unitP), href: hrefFor({ ...f, pmin: null, pmax: null, page: 1 }) })
   if (f.amin != null || f.amax != null) c.push({ label: range('Plotas', f.amin, f.amax, unitA), href: hrefFor({ ...f, amin: null, amax: null, page: 1 }) })

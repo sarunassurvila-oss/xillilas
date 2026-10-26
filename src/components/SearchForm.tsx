@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef, useState, useTransition } from 'react'
+import { DistrictPicker } from '@/components/DistrictPicker'
 import { Icon } from '@/components/icons'
 import { StreetInput } from '@/components/StreetInput'
 import { ENERGY, accWord } from '@/lib/listings'
@@ -14,13 +15,13 @@ type Location = { city: string; district: string }
 const NUMS = ['pmin', 'pmax', 'amin', 'amax', 'fmin', 'fmax', 'ymin', 'ymax', 'plmin', 'plmax', 'umin', 'umax'] as const
 type NumKey = (typeof NUMS)[number]
 type Form = Record<NumKey, string> & {
-  deal: Filters['deal']; type: Filters['type']; city: string; district: string; q: string; rooms: number[]
+  deal: Filters['deal']; type: Filters['type']; city: string; districts: string[]; q: string; rooms: number[]
   notFirst: boolean; notLast: boolean; photos: boolean; days: string; energy: string; purpose: string
   building: string[]; heating: string[]; finish: string[]; features: string[]
 }
 
 const toForm = (f: Filters): Form => ({
-  deal: f.deal, type: f.type, city: f.city, district: f.district, q: f.q, rooms: f.rooms,
+  deal: f.deal, type: f.type, city: f.city, districts: f.districts, q: f.q, rooms: f.rooms,
   ...(Object.fromEntries(NUMS.map((k) => [k, f[k]?.toString() ?? ''])) as Record<NumKey, string>),
   notFirst: f.notFirst, notLast: f.notLast, photos: f.photos, days: f.days?.toString() ?? '', energy: f.energy, purpose: f.purpose,
   building: f.building, heating: f.heating, finish: f.finish, features: f.features,
@@ -56,7 +57,7 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
   function go(next: Form, scroll = false) {
     clearTimeout(timer.current)
     const qs = toQuery({
-      deal: next.deal, type: next.type, city: next.city, district: next.district, q: next.q.trim(), rooms: next.rooms,
+      deal: next.deal, type: next.type, city: next.city, districts: next.districts, q: next.q.trim(), rooms: next.rooms,
       ...(Object.fromEntries(NUMS.map((k) => [k, n(next[k])])) as Record<NumKey, number | null>),
       notFirst: next.notFirst, notLast: next.notLast, photos: next.photos, days: next.days ? Number(next.days) : null,
       energy: next.energy, purpose: next.purpose, building: next.building, heating: next.heating, finish: next.finish, features: next.features,
@@ -120,7 +121,7 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
           </select>
         </label>
         <label className="field"><span>Miestas</span>
-          <select name="city" value={form.city} onChange={(e) => update({ city: e.target.value, district: '' })}>
+          <select name="city" value={form.city} onChange={(e) => update({ city: e.target.value, districts: [] })}>
             <option value="">Visa Lietuva</option>
             {CITY_GROUPS.map((g) => (
               <optgroup key={g.label} label={g.label}>{g.cities.map((c) => <option key={c}>{c}</option>)}</optgroup>
@@ -129,14 +130,12 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
             {form.city && !ALL_CITIES.includes(form.city) && !extraCities.includes(form.city) && <option>{form.city}</option>}
           </select>
         </label>
-        <label className="field"><span>Mikrorajonas</span>
-          <select name="district" value={form.district} disabled={!form.city} onChange={(e) => update({ district: e.target.value })}>
-            <option value="">{form.city ? 'Visi mikrorajonai' : 'Pirma pasirinkite miestą'}</option>
-            {districts.map((d) => <option key={d}>{d}</option>)}
-          </select>
-        </label>
+        <div className="field"><span id="districts-label">Mikrorajonai</span>
+          <DistrictPicker options={districts} value={form.districts} disabled={!form.city} labelledBy="districts-label"
+            onChange={(ds) => update({ districts: ds }, 'later')} />
+        </div>
         <label className="field"><span>Paieška</span>
-          <StreetInput city={form.city} district={form.district} value={form.q}
+          <StreetInput city={form.city} district={form.districts.length === 1 ? form.districts[0] : ''} value={form.q}
             onChange={(q) => update({ q }, 'later')} onPick={(q) => update({ q })}
             inputProps={{ name: 'q', type: 'search', placeholder: form.city ? 'Gatvė ar žodis, pvz. balkonas' : 'Žodis, pvz. balkonas (gatvėms pasirinkite miestą)' }} />
         </label>
