@@ -223,7 +223,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
               <b>+{pct(MARKET_PRICES.yearChange)}</b>
               <span>tiek per metus pabrango butai didmiesčiuose</span>
             </div>
-            <p className="source">Šaltinis: <a href={MARKET_PRICES.sourceUrl} target="_blank" rel="noopener noreferrer">{MARKET_PRICES.sourceLabel}</a></p>
+            <p className="source">Pagal viešai skelbiamus NT rinkos tyrimus.</p>
           </div>
           <div className="bars">
             {MARKET_PRICES.cities.map((c) => (
