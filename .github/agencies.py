@@ -11,24 +11,36 @@ def get(url, t=12):
         return '', url
 SEED = '''capital.lt capitalrealty.eu ober-haus.lt inreal.lt centrokubas.lt ntrinka.lt resident.lt crewestate.lt realu.lt reall.lt
 adomax.lt remax.lt balticsir.com newsec.lt realco.lt realta.lt savasbustas.lt pamario-nt.lt ltestate.lt eurodomus.lt domusoptima.lt'''.split()
-SKIP = re.compile(r'(facebook|instagram|linkedin|youtube|google|twitter|x\.com|tiktok|aruodas|domoplius|skelbiu|kampas|alio|ntagenturos|imones|visalietuva|rekvizitai|info\.lt|statyba|okredo|ikontaktai|w3\.org|schema\.org|wordpress|wix|apple|microsoft|cloudflare|gstatic|jquery|cookiebot|lrytas|delfi|15min|vz\.lt|vrk|registrucentras)', re.I)
+SKIP = re.compile(r'(facebook|instagram|linkedin|youtube|google|twitter|x\.com|tiktok|aruodas|domoplius|skelbiu|kampas|alio|ntagenturos|imones|visalietuva|vz|verslo|rekvizitai|imones|1588|zebra|google|rekvizitai|info\.lt|statyba|okredo|ikontaktai|w3\.org|schema\.org|wordpress|wix|apple|microsoft|cloudflare|gstatic|jquery|cookiebot|lrytas|delfi|15min|vz\.lt|vrk|registrucentras)', re.I)
 domains = []
 for d in SEED:
     if d not in domains: domains.append(d)
-for path in ['', 'vilnius', 'kaunas', 'klaipeda', 'siauliai', 'panevezys', 'alytus', 'marijampole', 'utena', 'palanga', 'druskininkai']:
-    page, _ = get('https://www.ntagenturos.lt/' + path)
+# Įmonių katalogas: agentūrų profiliai → jų svetainių adresai.
+profiles = []
+for city in ['vilniuje', 'kaune', 'klaipedoje', 'siauliuose', 'panevezyje', 'alytuje', 'marijampoleje', 'utenoje', 'palangoje', 'druskininkuose', 'kedainiuose', 'mazeikiuose', 'jonavoje', 'telsiuose', 'taurageje']:
+    for pg in range(1, 4):
+        url = f'https://www.visalietuva.lt/imones/nekilnojamojo-turto-agenturos/{city}' + (f'/{pg}' if pg > 1 else '')
+        page, _ = get(url)
+        links = [urllib.parse.urljoin(url, h) for h in re.findall(r'href=["\']([^"\']*/imone/[^"\'#?]+)', page)]
+        new = [l for l in dict.fromkeys(links) if l not in profiles]
+        profiles += new
+        time.sleep(0.4)
+        if not new: break
+sys.stderr.write(f'katalogo profilių: {len(profiles)}\n')
+for prof in profiles[:220]:
+    page, _ = get(prof)
     for h in re.findall(r'href=["\'](https?://[^"\'#?]+)', page):
-        host = urllib.parse.urlparse(h).hostname or ''
-        host = host.lower().removeprefix('www.')
-        if host and not SKIP.search(host) and (host.endswith('.lt') or host.endswith('.eu') or host.endswith('.com')) and host not in domains:
+        host = (urllib.parse.urlparse(h).hostname or '').lower().removeprefix('www.')
+        if host and not SKIP.search(host) and host.count('.') <= 2 and host not in domains:
             domains.append(host)
-    time.sleep(0.3)
+    time.sleep(0.35)
+sys.stderr.write(f'svetainių kandidatų: {len(domains)}\n')
 GENERIC = re.compile(r'^(info|office|biuras|hello|labas|sveiki|kontaktai|kontaktas|contact|contacts|nt|sales|pardavimai|nuoma|vilnius|kaunas|klaipeda|siauliai|panevezys|alytus|marijampole|utena|palanga|admin|administracija|reception|mail|uzklausos|uzklausa|agentura|klientai|partneriai|marketingas|marketing|rinkodara|centras|pagalba|support|turtas|bustas|namai|sekretore|vadyba|ofisas|kaunas\.office|vilnius\.office)$', re.I)
 EMAIL = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
 out = io.StringIO(); w = csv.writer(out, delimiter=';', lineterminator='\n')
 w.writerow(['Agentūra (svetainė)', 'Bendras el. paštas', 'Šaltinis'])
 n_ok = 0
-for d in domains[:140]:
+for d in domains[:260]:
     home, final = get('https://' + d)
     if not home: home, final = get('http://' + d)
     if not home: continue
@@ -52,7 +64,5 @@ for d in domains[:140]:
         n_ok += 1
         w.writerow([d, ', '.join(found[:4]), src])
     time.sleep(0.4)
-page, _ = get('https://www.ntagenturos.lt/vilnius')
-sys.stderr.write('katalogas: ' + str(len(page)) + ' simb.; nuorodų pavyzdžiai: ' + ' '.join(sorted(set(re.findall(r'href=["\']([^"\']{3,80})', page)))[:40]) + '\n')
 sys.stdout.write(out.getvalue())
-sys.stderr.write(f'tikrinta svetainių: {min(len(domains),140)}, su bendru el. paštu: {n_ok}\n')
+sys.stderr.write(f'tikrinta svetainių: {min(len(domains),260)}, su bendru el. paštu: {n_ok}\n')

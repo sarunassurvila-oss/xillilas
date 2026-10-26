@@ -132,6 +132,7 @@ jobs:
           ref: claude/site-check
           sparse-checkout: .github
       - name: NT agentūrų bendri kontaktai
+        timeout-minutes: 30
         run: |
           python3 .github/agencies.py > agencies.csv 2> stats.txt
           cat stats.txt
