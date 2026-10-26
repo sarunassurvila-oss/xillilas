@@ -49,7 +49,6 @@ jobs:
               ms = collections.Counter(m for (c, m, s) in pairs if c == city).most_common(3)
               print(city, len(ss), ss[:6], ms)
           PY
-          sed -i 's/^          //' extract.py
           python3 extract.py lt.osm.pbf >> out.txt 2>&1 || echo "extract klaida" >> out.txt
           echo "tsv: $(wc -l < data/raw/streets.tsv 2>/dev/null) eil., $(du -h data/raw/streets.tsv 2>/dev/null | cut -f1)" >> out.txt
           git config user.name "github-actions[bot]"
