@@ -27,7 +27,6 @@ export type Filters = {
 export type SearchParams = Record<string, string | string[] | undefined>
 
 export const PAGE_SIZE = 24
-export const CITY_ORDER = ['Vilnius', 'Kaunas', 'Klaipėda', 'Šiauliai', 'Panevėžys', 'Palanga']
 export const roomsApply = (type: Filters['type']) => type === 'all' || type === 'butas' || type === 'namas'
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? ''
@@ -89,12 +88,4 @@ export function searchWords(q: string) {
     .split(/[^a-z0-9-]+/)
     .filter((w) => w.length >= 2)
     .slice(0, 5)
-}
-
-export function sortCities(list: string[]) {
-  return [...list].sort((a, b) => {
-    const ia = CITY_ORDER.indexOf(a), ib = CITY_ORDER.indexOf(b)
-    if (ia > -1 || ib > -1) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
-    return a.localeCompare(b, 'lt')
-  })
 }

@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef, useState, useTransition } from 'react'
 import { accWord } from '@/lib/listings'
-import { roomsApply, sortCities, toQuery, type Filters } from '@/lib/filters'
+import { roomsApply, toQuery, type Filters } from '@/lib/filters'
+import { ALL_CITIES, CITY_GROUPS, districtsOf } from '@/lib/locations'
 
 type Location = { city: string; district: string }
 type Form = {
@@ -24,9 +25,14 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
   const [pending, startTransition] = useTransition()
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  const cities = useMemo(() => sortCities([...new Set(locations.map((l) => l.city))]), [locations])
+  // Visi Lietuvos miestai ir papildomai vietos, kurias skelbėjai įrašė patys.
+  const extraCities = useMemo(
+    () => [...new Set(locations.map((l) => l.city))].filter((c) => !ALL_CITIES.includes(c)).sort((a, b) => a.localeCompare(b, 'lt')),
+    [locations],
+  )
   const districts = useMemo(
-    () => locations.filter((l) => l.city === form.city).map((l) => l.district).sort((a, b) => a.localeCompare(b, 'lt')),
+    () => [...new Set([...districtsOf(form.city), ...locations.filter((l) => l.city === form.city).map((l) => l.district)])]
+      .sort((a, b) => a.localeCompare(b, 'lt')),
     [locations, form.city],
   )
 
@@ -76,8 +82,11 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
         <label className="field"><span>Miestas</span>
           <select name="city" value={form.city} onChange={(e) => update({ city: e.target.value, district: '' })}>
             <option value="">Visa Lietuva</option>
-            {cities.map((c) => <option key={c}>{c}</option>)}
-            {form.city && !cities.includes(form.city) && <option>{form.city}</option>}
+            {CITY_GROUPS.map((g) => (
+              <optgroup key={g.label} label={g.label}>{g.cities.map((c) => <option key={c}>{c}</option>)}</optgroup>
+            ))}
+            {extraCities.length > 0 && <optgroup label="Kita">{extraCities.map((c) => <option key={c}>{c}</option>)}</optgroup>}
+            {form.city && !ALL_CITIES.includes(form.city) && !extraCities.includes(form.city) && <option>{form.city}</option>}
           </select>
         </label>
         <label className="field"><span>Mikrorajonas</span>

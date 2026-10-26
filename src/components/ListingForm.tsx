@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from 'react'
 import { saveListing } from '@/app/mano/actions'
 import { Icon } from '@/components/icons'
 import { PHOTO_BUCKET } from '@/lib/env'
-import { CITY_ORDER } from '@/lib/filters'
 import {
   BUILDINGS, ENERGY, FEATURES, FINISHES, HEATING, PURPOSES, TYPES, TYPE_KEYS, fieldApplies, photoUrl,
   type EffectiveStatus, type ListingType,
 } from '@/lib/listings'
+import { ALL_CITIES, CITY_GROUPS, districtsOf } from '@/lib/locations'
 import { createClient } from '@/lib/supabase/client'
 import { validateListing, type ListingInput } from '@/lib/validate'
 
@@ -62,16 +62,18 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
   itemsRef.current = items
   useEffect(() => () => itemsRef.current.forEach((i) => i.kind === 'new' && URL.revokeObjectURL(i.url)), [])
 
+  const [otherDistrict, setOtherDistrict] = useState(() => Boolean(initial.district) && !districtsOf(initial.city).includes(initial.district))
   const isDraft = !listingId || status === 'draft'
   const t = v.type
   const set = <K extends keyof ListingInput>(k: K, val: ListingInput[K]) => {
     setV((s) => ({ ...s, [k]: val }))
-    if (errors[k]) {
-      const rest = { ...errors }
+    setErrors((e) => {
+      if (!e[k]) return e
+      const rest = { ...e }
       delete rest[k]
-      setErrors(rest)
       if (Object.keys(rest).length === 0) setMessage('')
-    }
+      return rest
+    })
   }
   const err = (k: string) => (errors[k] ? <span className="err" id={`${k}-err`}>{errors[k]}</span> : null)
   const inv = (k: string) => (errors[k] ? { 'aria-invalid': true as const, 'aria-describedby': `${k}-err` } : {})
@@ -197,12 +199,31 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
       <fieldset className="form-section">
         <legend>Vieta</legend>
         <div className="fgrid">
-          <label className="field"><span>Miestas ar savivaldybė</span>
-            <input name="city" list="cities" autoComplete="off" placeholder="pvz. Vilnius" value={v.city} onChange={(e) => set('city', e.target.value)} {...inv('city')} />
+          <label className="field"><span>Miestas ar rajonas</span>
+            <select name="city" value={v.city} onChange={(e) => { set('city', e.target.value); set('district', ''); setOtherDistrict(false) }} {...inv('city')}>
+              <option value="">Pasirinkite</option>
+              {CITY_GROUPS.map((g) => (
+                <optgroup key={g.label} label={g.label}>{g.cities.map((c) => <option key={c}>{c}</option>)}</optgroup>
+              ))}
+              {v.city && !ALL_CITIES.includes(v.city) && <option>{v.city}</option>}
+            </select>
             {err('city')}
           </label>
           <label className="field"><span>Mikrorajonas ar gyvenvietė</span>
-            <input name="district" autoComplete="off" placeholder="pvz. Žirmūnai" value={v.district} onChange={(e) => set('district', e.target.value)} {...inv('district')} />
+            <select name="district" value={otherDistrict ? '__other' : v.district} disabled={!v.city} {...inv('district')}
+              onChange={(e) => {
+                const other = e.target.value === '__other'
+                setOtherDistrict(other)
+                set('district', other ? '' : e.target.value)
+              }}>
+              <option value="">{v.city ? 'Pasirinkite' : 'Pirma pasirinkite miestą'}</option>
+              {districtsOf(v.city).map((d) => <option key={d}>{d}</option>)}
+              <option value="__other">Kita (įrašysiu pats)</option>
+            </select>
+            {otherDistrict && (
+              <input name="district_other" autoComplete="off" placeholder="Įrašykite mikrorajoną ar gyvenvietę" aria-label="Kitas mikrorajonas ar gyvenvietė"
+                value={v.district} onChange={(e) => set('district', e.target.value)} />
+            )}
             {err('district')}
           </label>
           <label className="field"><span>Gatvė</span>
@@ -210,7 +231,6 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
             {err('street') ?? <span className="hint">Namo numerį rašykite tik jei norite, kad jis būtų matomas.</span>}
           </label>
         </div>
-        <datalist id="cities">{[...CITY_ORDER, 'Alytus', 'Marijampolė', 'Mažeikiai', 'Jonava', 'Utena', 'Kėdainiai', 'Telšiai', 'Tauragė', 'Ukmergė', 'Visaginas', 'Druskininkai', 'Neringa', 'Trakai', 'Birštonas', 'Vilniaus r.', 'Kauno r.', 'Klaipėdos r.', 'Trakų r.'].map((c) => <option key={c} value={c} />)}</datalist>
       </fieldset>
 
       <fieldset className="form-section">
