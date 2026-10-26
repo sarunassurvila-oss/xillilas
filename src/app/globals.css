@@ -158,9 +158,12 @@ select:disabled { opacity: .6 }
 .rooms span:hover { border-color: var(--ink-3) }
 .rooms input:checked + span { background: var(--brand); border-color: var(--brand); color: var(--brand-ink) }
 .rooms input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px }
-.f-submit { grid-column: 4 }
-.f-submit .btn { height: 44px; width: 100%; font-size: 15px }
-@media (max-width: 980px) { .fields { grid-template-columns: repeat(2, minmax(0, 1fr)) } .f-submit { grid-column: auto } }
+.f-submit { grid-column: 4; display: flex; gap: 8px }
+.f-submit .btn { height: 44px; font-size: 15px }
+.f-submit .btn-cta { flex: 1; min-width: 0 }
+.f-map { flex: none; gap: 6px; padding: 0 14px }
+.f-map .ico { width: 18px; height: 18px }
+@media (max-width: 980px) { .fields { grid-template-columns: repeat(2, minmax(0, 1fr)) } .f-submit { grid-column: 1 / -1 } }
 @media (max-width: 560px) { .fields { grid-template-columns: minmax(0, 1fr) } .search { padding: 16px } }
 
 /* kategorijos */
@@ -439,7 +442,7 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .mpop-main:hover span { color: var(--link) }
 .mpop-gmaps { border-top: 1px solid var(--line); padding: 9px 12px; font: 600 13.5px var(--font-body); color: var(--link); text-decoration: none }
 .mpop-gmaps:hover { background: var(--surface-2) }
-@media (max-width: 640px) { .lmap { height: 72vh } .res-tools { width: 100% } }
+@media (max-width: 640px) { .lmap { height: 60vh } .res-tools { width: 100% } }
 
 /* Kelių mikrorajonų pasirinkimas */
 .dpick { position: relative; min-width: 0 }
@@ -460,3 +463,23 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .dp-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding-top: 8px }
 .dp-foot .btn { height: 38px; padding: 0 16px }
 @media (max-width: 460px) { .dp-panel { width: 100% } }
+
+/* Paieška žemėlapyje: sąrašas šalia žemėlapio */
+.mapsplit { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 16px; align-items: start }
+.mapsplit-map { order: 2; position: sticky; top: 80px }
+.maplist { order: 1; height: min(70vh, 620px); overflow-y: auto; display: grid; align-content: start; gap: 10px; padding-right: 4px; overscroll-behavior: contain }
+.maplist-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-weight: 600; font-size: 14px; color: var(--ink-2); margin: 0 }
+.mcard { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 12px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); text-decoration: none; transition: border-color .12s, box-shadow .12s }
+.mcard img, .mcard-noimg { width: 112px; height: 84px; border-radius: 8px; object-fit: cover; display: block; background: linear-gradient(135deg, var(--surface-2), var(--line)) }
+.mcard-body { display: grid; gap: 2px; align-content: center; min-width: 0 }
+.mcard-body b { font: 700 16px var(--font-display) }
+.mcard-body span, .mcard-body small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.mcard-body span { font-weight: 600; font-size: 14px }
+.mcard-body small { color: var(--ink-3); font-size: 12.5px }
+.mcard:hover, .mcard.on { border-color: var(--accent); box-shadow: var(--shadow-sm) }
+.mk-price.hover { background: var(--brand); color: #fff; border-color: var(--brand); transform: scale(1.1); z-index: 3 }
+@media (max-width: 960px) {
+  .mapsplit { grid-template-columns: minmax(0, 1fr) }
+  .mapsplit-map { order: 0; position: static }
+  .maplist { order: 1; height: auto; overflow: visible; padding: 0 }
+}

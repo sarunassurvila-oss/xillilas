@@ -212,7 +212,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           </div>
         ) : isMap && total > 0 ? (
           <>
-            <ListingsMap points={points} />
+            <ListingsMap points={points} fitKey={[f.deal, f.type, f.city, ...f.districts].join('|')} />
             <p className="map-note">
               {points.length === total
                 ? `Žemėlapyje ${fmt(total)} ${nomWord(total)}. Paspauskite kainą, kad pamatytumėte skelbimą.`

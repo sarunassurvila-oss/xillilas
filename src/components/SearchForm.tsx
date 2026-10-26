@@ -54,14 +54,14 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
     [locations, form.city],
   )
 
-  function go(next: Form, scroll = false) {
+  function go(next: Form, scroll = false, view = filters.view) {
     clearTimeout(timer.current)
     const qs = toQuery({
       deal: next.deal, type: next.type, city: next.city, districts: next.districts, q: next.q.trim(), rooms: next.rooms,
       ...(Object.fromEntries(NUMS.map((k) => [k, n(next[k])])) as Record<NumKey, number | null>),
       notFirst: next.notFirst, notLast: next.notLast, photos: next.photos, days: next.days ? Number(next.days) : null,
       energy: next.energy, purpose: next.purpose, building: next.building, heating: next.heating, finish: next.finish, features: next.features,
-      sort: filters.sort, view: filters.view,
+      sort: filters.sort, view,
     })
     startTransition(() => {
       if (scroll) router.push(`/${qs ? `?${qs}` : ''}#rezultatai`)
@@ -166,6 +166,11 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
         <div className="f-submit">
           <button className="btn btn-cta" type="submit" disabled={pending}>
             {pending ? 'Ieškoma…' : total ? `Rodyti ${total} ${accWord(total)}` : 'Skelbimų nerasta'}
+          </button>
+          <button className="btn btn-ghost f-map" type="button" disabled={pending}
+            onClick={() => go(form, true, filters.view === 'map' ? 'list' : 'map')}>
+            <Icon name={filters.view === 'map' ? 'list' : 'map'} />
+            {filters.view === 'map' ? 'Sąraše' : 'Žemėlapyje'}
           </button>
         </div>
       </div>
