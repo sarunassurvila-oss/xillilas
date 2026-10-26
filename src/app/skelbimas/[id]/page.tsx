@@ -6,6 +6,7 @@ import { Gallery } from '@/components/Gallery'
 import { EnergyBadge, ListingCard } from '@/components/ListingCard'
 import { LoanCalculator } from '@/components/LoanCalculator'
 import { PhoneReveal } from '@/components/PhoneReveal'
+import { PointMap } from '@/components/PointMap'
 import { SetupNotice } from '@/components/SetupNotice'
 import { isConfigured } from '@/lib/env'
 import { hrefFor } from '@/lib/filters'
@@ -18,7 +19,7 @@ import { createClient, getSessionUser } from '@/lib/supabase/server'
 
 // contact_phone sąmoningai neįtrauktas: jį parodo PhoneReveal tik paspaudus.
 const DETAIL_COLUMNS =
-  'id,owner_id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,heating,finish,energy,purpose,features,description,contact_name,published_at,expires_at,listing_photos(path,position)'
+  'id,owner_id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,heating,finish,energy,purpose,features,description,contact_name,published_at,expires_at,lat,lng,listing_photos(path,position)'
 const CARD_COLUMNS =
   'id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,energy,purpose,features,published_at,listing_photos(path,position)'
 
@@ -150,6 +151,14 @@ export default async function ListingPage({ params }: Props) {
             <>
               <h2>Aprašymas</h2>
               <p className="d-desc">{l.description}</p>
+            </>
+          )}
+
+          {l.lat != null && l.lng != null && (
+            <>
+              <h2>Vieta žemėlapyje</h2>
+              <PointMap lat={l.lat} lng={l.lng} />
+              <p className="hint">{addrOf(l)}. Vieta gali būti nurodyta apytiksliai.</p>
             </>
           )}
         </div>

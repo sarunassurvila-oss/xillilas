@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { PHOTO_BUCKET } from '@/lib/env'
+import { geocodeAddress } from '@/lib/geocode'
 import { createClient } from '@/lib/supabase/server'
 import { PHONE_RE, validateListing, type ListingInput } from '@/lib/validate'
 
@@ -33,6 +34,8 @@ export async function saveListing(input: ListingInput, publish: 'active' | 'draf
   const { supabase } = await requireUser()
   const { row, errors } = validateListing(input)
   if (!row) return { ok: false, errors, message: 'Patikrinkite pažymėtus laukus.' }
+  // Nepažymėjus vietos žemėlapyje, ji nustatoma pagal adresą (nepavykus skelbimas tiesiog nerodomas žemėlapyje).
+  if (row.lat === null) Object.assign(row, await geocodeAddress(row.city, row.district, row.street))
   const payload = publish === 'keep' ? row : { ...row, status: publish }
 
   const res = id
@@ -42,6 +45,13 @@ export async function saveListing(input: ListingInput, publish: 'active' | 'draf
   if (!res.data) return { ok: false, errors: {}, message: 'Skelbimas nerastas arba neturite teisės jo keisti.' }
   refresh(res.data.id)
   return { ok: true, id: res.data.id }
+}
+
+/** Mygtukas „Rasti pagal adresą“ skelbimo formoje. */
+export async function findOnMap(city: string, district: string, street: string) {
+  await requireUser()
+  if (!city.trim()) return null
+  return geocodeAddress(city.slice(0, 80), district.slice(0, 80), street.slice(0, 120))
 }
 
 export type ActionResult = { ok: boolean; message?: string }

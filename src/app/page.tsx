@@ -1,18 +1,23 @@
 import Link from 'next/link'
 import { Icon, type IconName } from '@/components/icons'
 import { ListingCard } from '@/components/ListingCard'
+import { ListingsMap, type MapPoint } from '@/components/ListingsMap'
 import { SearchForm } from '@/components/SearchForm'
 import { SetupNotice } from '@/components/SetupNotice'
 import { SortSelect } from '@/components/SortSelect'
 import { isConfigured } from '@/lib/env'
 import { MARKET_PRICES } from '@/lib/market-prices'
 import { ADV_DEFAULTS, PAGE_SIZE, advApplies, hrefFor, parseFilters, roomsApply, searchWords, type Filters, type SearchParams } from '@/lib/filters'
-import { TYPES, fmt, nomWord, type Listing } from '@/lib/listings'
+import { TYPES, addrOf, coverOf, fmt, fullTitle, nomWord, photoUrl, type Listing } from '@/lib/listings'
 import { skyline } from '@/lib/picture'
 import { createClient } from '@/lib/supabase/server'
 
 const CARD_COLUMNS =
   'id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,energy,purpose,features,published_at,listing_photos(path,position)'
+
+// Žemėlapiui užtenka trumpos informacijos; rodoma iki MAP_LIMIT naujausių skelbimų su pažymėta vieta.
+const MAP_COLUMNS = 'id,deal,type,city,district,street,price,area,rooms,floors,purpose,lat,lng,listing_photos(path,position)'
+const MAP_LIMIT = 1000
 
 const CATS: { type: Filters['type']; label: string; icon: IconName }[] = [
   { type: 'all', label: 'Visi', icon: 'all' },
@@ -25,11 +30,12 @@ const CATS: { type: Filters['type']; label: string; icon: IconName }[] = [
 
 type Supabase = Awaited<ReturnType<typeof createClient>>
 
-function queryListings(supabase: Supabase, f: Filters) {
+function queryListings(supabase: Supabase, f: Filters, mode: 'list' | 'map' = 'list') {
+  const columns = mode === 'map' ? MAP_COLUMNS : CARD_COLUMNS
   let q = supabase
     .from('listings')
     // Su „!inner“ lieka tik skelbimai, turintys bent vieną nuotrauką.
-    .select(f.photos ? CARD_COLUMNS.replace('listing_photos(', 'listing_photos!inner(') : CARD_COLUMNS, { count: 'exact' })
+    .select(f.photos ? columns.replace('listing_photos(', 'listing_photos!inner(') : columns, { count: 'exact' })
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
     .eq('deal', f.deal)
@@ -73,6 +79,7 @@ function queryListings(supabase: Supabase, f: Filters) {
   if (advApplies('purpose', t) && f.purpose) q = q.eq('purpose', f.purpose)
   if (f.features.length) q = q.contains('features', f.features)
   if (f.days != null) q = q.gte('published_at', new Date(Date.now() - f.days * 864e5).toISOString())
+  if (mode === 'map') return q.not('lat', 'is', null).order('published_at', { ascending: false }).limit(MAP_LIMIT)
   if (f.sort === 'cheap') q = q.order('price', { ascending: true })
   else if (f.sort === 'dear') q = q.order('price', { ascending: false })
   else if (f.sort === 'big') q = q.order('area_m2', { ascending: false })
@@ -120,11 +127,19 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
   if (!isConfigured) return <SetupNotice />
   const f = parseFilters(await searchParams)
   const supabase = await createClient()
-  const [listRes, countsRes, locRes] = await Promise.all([
+  const isMap = f.view === 'map'
+  const [listRes, countsRes, locRes, mapRes] = await Promise.all([
     queryListings(supabase, f),
     supabase.rpc('listing_type_counts', { p_deal: f.deal }),
     supabase.rpc('listing_locations'),
+    isMap ? queryListings(supabase, f, 'map') : null,
   ])
+  const points: MapPoint[] = ((mapRes?.data ?? []) as unknown as Listing[])
+    .filter((l) => l.lat != null && l.lng != null)
+    .map((l) => {
+      const cover = coverOf(l)
+      return { id: l.id, lat: l.lat!, lng: l.lng!, deal: l.deal, price: l.price, title: fullTitle(l), addr: addrOf(l), photo: cover ? photoUrl(cover.path) : null }
+    })
 
   const listings = (listRes.data ?? []) as unknown as Listing[]
   const total = listRes.count ?? 0
@@ -156,7 +171,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
 
       <nav className="wrap cats" aria-label="Kategorijos">
         {CATS.map((c) => (
-          <Link key={c.type} className="cat" href={hrefFor({ deal: f.deal, type: c.type })} aria-current={f.type === c.type ? 'true' : undefined}>
+          <Link key={c.type} className="cat" href={hrefFor({ deal: f.deal, type: c.type, view: f.view })} aria-current={f.type === c.type ? 'true' : undefined}>
             <Icon name={c.icon} />
             <b>{c.label}</b>
             <small>{fmt(c.type === 'all' ? allCount : counts.get(c.type) ?? 0)} skelb.</small>
@@ -170,7 +185,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
             <h2 id="resTitle">{title}</h2>
             <p className="res-count">{total ? `Rasta ${fmt(total)} ${nomWord(total)}` : 'Skelbimų nerasta'}</p>
           </div>
-          <SortSelect filters={f} />
+          <div className="res-tools">
+            <nav className="viewsw" aria-label="Rodymo būdas">
+              <Link href={hrefFor({ ...f, view: 'list', page: 1 })} scroll={false} aria-current={isMap ? undefined : 'page'}><Icon name="list" />Sąrašas</Link>
+              <Link href={hrefFor({ ...f, view: 'map', page: 1 })} scroll={false} aria-current={isMap ? 'page' : undefined}><Icon name="map" />Žemėlapis</Link>
+            </nav>
+            {!isMap && <SortSelect filters={f} />}
+          </div>
         </div>
         {chips.length > 0 && (
           <div className="chips">
@@ -180,15 +201,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
                 <Link href={c.href} scroll={false} aria-label={`Pašalinti filtrą: ${c.label}`}><Icon name="close" /></Link>
               </span>
             ))}
-            {chips.length > 1 && <Link className="link-btn" href={hrefFor({ deal: f.deal, type: f.type, sort: f.sort, ...ADV_DEFAULTS })} scroll={false}>Išvalyti viską</Link>}
+            {chips.length > 1 && <Link className="link-btn" href={hrefFor({ deal: f.deal, type: f.type, sort: f.sort, view: f.view, ...ADV_DEFAULTS })} scroll={false}>Išvalyti viską</Link>}
           </div>
         )}
 
-        {listRes.error ? (
+        {listRes.error || mapRes?.error ? (
           <div className="empty">
             <h3>Nepavyko įkelti skelbimų</h3>
             <p>Patikrinkite interneto ryšį ir atnaujinkite puslapį. Jei klaida kartojasi, patikrinkite Supabase nustatymus.</p>
           </div>
+        ) : isMap && total > 0 ? (
+          <>
+            <ListingsMap points={points} />
+            <p className="map-note">
+              {points.length === total
+                ? `Žemėlapyje ${fmt(total)} ${nomWord(total)}. Paspauskite kainą, kad pamatytumėte skelbimą.`
+                : `Žemėlapyje ${fmt(points.length)} iš ${fmt(total)}. Kitų skelbimų vieta dar nenurodyta – juos rasite sąraše.`}
+            </p>
+          </>
         ) : listings.length ? (
           <div className="cards">
             {listings.map((l) => <ListingCard key={l.id} listing={l} photoCount={l.listing_photos?.length} />)}
@@ -200,12 +230,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
               ? 'Pabandykite padidinti kainos ribą, pasirinkti kitą mikrorajoną arba ieškoti visoje Lietuvoje.'
               : 'Būkite pirmas: įdėkite skelbimą, ir jis iškart atsiras čia.'}</p>
             {allCount
-              ? <Link className="btn btn-ghost" href={hrefFor({ deal: f.deal })}>Išvalyti filtrus</Link>
+              ? <Link className="btn btn-ghost" href={hrefFor({ deal: f.deal, view: f.view })}>Išvalyti filtrus</Link>
               : <Link className="btn btn-cta" href="/mano/naujas">Įdėti skelbimą</Link>}
           </div>
         )}
 
-        {pages > 1 && (
+        {!isMap && pages > 1 && (
           <nav className="pager" aria-label="Puslapiai">
             {f.page > 1 && <Link className="btn btn-ghost" href={hrefFor({ ...f, page: f.page - 1 })}>Ankstesni</Link>}
             <span>{f.page} iš {pages}</span>

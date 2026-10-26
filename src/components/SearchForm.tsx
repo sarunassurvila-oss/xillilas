@@ -60,7 +60,7 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
       ...(Object.fromEntries(NUMS.map((k) => [k, n(next[k])])) as Record<NumKey, number | null>),
       notFirst: next.notFirst, notLast: next.notLast, photos: next.photos, days: next.days ? Number(next.days) : null,
       energy: next.energy, purpose: next.purpose, building: next.building, heating: next.heating, finish: next.finish, features: next.features,
-      sort: filters.sort,
+      sort: filters.sort, view: filters.view,
     })
     startTransition(() => {
       if (scroll) router.push(`/${qs ? `?${qs}` : ''}#rezultatai`)

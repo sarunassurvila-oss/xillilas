@@ -22,6 +22,8 @@ export type Filters = {
   rooms: number[]
   sort: SortKey
   page: number
+  /** Rezultatai sąraše arba žemėlapyje. */
+  view: 'list' | 'map'
   // Išsami paieška
   fmin: number | null
   fmax: number | null
@@ -113,6 +115,7 @@ export function parseFilters(sp: SearchParams): Filters {
     rooms: [...new Set(roomsRaw.map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 5))].sort(),
     sort: sort in SORTS ? sort : 'new',
     page,
+    view: one(sp.view) === 'map' ? 'map' : 'list',
     fmin: numOrNull(one(sp.fmin)),
     fmax: numOrNull(one(sp.fmax)),
     notFirst: one(sp.nf) === '1',
@@ -161,6 +164,7 @@ export function toQuery(f: Partial<Filters>) {
   if (f.features?.length) p.set('feat', f.features.join(','))
   num('days', f.days)
   if (f.photos) p.set('photos', '1')
+  if (f.view === 'map') p.set('view', 'map')
   if (f.sort && f.sort !== 'new') p.set('sort', f.sort)
   if (f.page && f.page > 1) p.set('page', String(f.page))
   return p.toString()

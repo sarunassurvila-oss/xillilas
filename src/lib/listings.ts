@@ -37,6 +37,8 @@ export type Listing = {
   created_at?: string
   updated_at?: string
   listing_photos?: Photo[]
+  lat?: number | null
+  lng?: number | null
 }
 
 export const TYPES: Record<ListingType, { one: string; many: string }> = {

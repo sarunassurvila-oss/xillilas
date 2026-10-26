@@ -14,6 +14,7 @@ export function rowToInput(r: Row): ListingInput {
     plot: str(r.plot), year: str(r.year), building: str(r.building), heating: str(r.heating), finish: str(r.finish),
     energy: str(r.energy), purpose: str(r.purpose), features: Array.isArray(r.features) ? (r.features as string[]) : [],
     description: str(r.description), contact_name: str(r.contact_name), contact_phone: str(r.contact_phone),
+    lat: str(r.lat), lng: str(r.lng),
   }
 }
 

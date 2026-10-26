@@ -2,6 +2,7 @@ import {
   BUILDINGS, ENERGY, FEATURES, FINISHES, HEATING, PURPOSES, TYPE_KEYS, fieldApplies,
   type Deal, type ListingType,
 } from '@/lib/listings'
+import { inLithuania } from '@/lib/geo'
 
 /** Formos reikšmės (tekstas, kaip įvesta), siunčiamos į serverio veiksmą. */
 export type ListingInput = {
@@ -26,6 +27,9 @@ export type ListingInput = {
   description: string
   contact_name: string
   contact_phone: string
+  /** Vieta žemėlapyje; tuščia – nustatoma pagal adresą. */
+  lat: string
+  lng: string
 }
 
 export type ListingRow = {
@@ -50,6 +54,8 @@ export type ListingRow = {
   description: string
   contact_name: string
   contact_phone: string
+  lat: number | null
+  lng: number | null
 }
 
 export const PHONE_RE = /^\+?[0-9 ()-]{8,20}$/
@@ -118,6 +124,10 @@ export function validateListing(v: ListingInput): { row: ListingRow | null; erro
   if (!contact_name) e.contact_name = 'Įrašykite vardą, kurį matys pirkėjai.'
   if (!PHONE_RE.test(contact_phone)) e.contact_phone = 'Įrašykite telefono numerį, pvz. +370 612 34567.'
 
+  let lat = num(v.lat), lng = num(v.lng)
+  if (lat === null || lng === null || Number.isNaN(lat) || Number.isNaN(lng)) lat = lng = null
+  else if (!inLithuania(lat, lng)) e.location = 'Pažymėta vieta turi būti Lietuvoje.'
+
   if (Object.keys(e).length) return { row: null, errors: e }
   return {
     errors: {},
@@ -128,7 +138,7 @@ export function validateListing(v: ListingInput): { row: ListingRow | null; erro
       heating: pickFrom('heating', HEATING),
       finish: pickFrom('finish', FINISHES),
       energy: pickFrom('energy', ENERGY),
-      purpose, features, description, contact_name, contact_phone,
+      purpose, features, description, contact_name, contact_phone, lat, lng,
     },
   }
 }

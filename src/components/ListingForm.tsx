@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { saveListing } from '@/app/mano/actions'
+import { findOnMap, saveListing } from '@/app/mano/actions'
 import { Icon } from '@/components/icons'
+import { MapPicker } from '@/components/MapPicker'
 import { StreetInput } from '@/components/StreetInput'
 import { PHOTO_BUCKET } from '@/lib/env'
 import {
@@ -64,6 +65,18 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
   useEffect(() => () => itemsRef.current.forEach((i) => i.kind === 'new' && URL.revokeObjectURL(i.url)), [])
 
   const [otherDistrict, setOtherDistrict] = useState(() => Boolean(initial.district) && !districtsOf(initial.city).includes(initial.district))
+  const [finding, setFinding] = useState(false)
+  const [findMsg, setFindMsg] = useState('')
+  const hasPin = v.lat !== '' && v.lng !== ''
+  async function find() {
+    setFinding(true)
+    setFindMsg('')
+    const p = await findOnMap(v.city, v.district, v.street).catch(() => null)
+    setFinding(false)
+    if (!p) return setFindMsg('Adreso rasti nepavyko. Pažymėkite vietą žemėlapyje patys.')
+    set('lat', String(p.lat))
+    set('lng', String(p.lng))
+  }
   const isDraft = !listingId || status === 'draft'
   const t = v.type
   const set = <K extends keyof ListingInput>(k: K, val: ListingInput[K]) => {
@@ -201,7 +214,7 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
         <legend>Vieta</legend>
         <div className="fgrid">
           <label className="field"><span>Miestas ar rajonas</span>
-            <select name="city" value={v.city} onChange={(e) => { set('city', e.target.value); set('district', ''); setOtherDistrict(false) }} {...inv('city')}>
+            <select name="city" value={v.city} onChange={(e) => { set('city', e.target.value); set('district', ''); set('lat', ''); set('lng', ''); setOtherDistrict(false) }} {...inv('city')}>
               <option value="">Pasirinkite</option>
               {CITY_GROUPS.map((g) => (
                 <optgroup key={g.label} label={g.label}>{g.cities.map((c) => <option key={c}>{c}</option>)}</optgroup>
@@ -232,6 +245,22 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
               inputProps={{ name: 'street', placeholder: v.city ? 'Pradėkite rašyti gatvę' : 'pvz. Kalvarijų g.', ...inv('street') }} />
             {err('street') ?? <span className="hint">Namo numerį rašykite tik jei norite, kad jis būtų matomas.</span>}
           </label>
+          <div className="field span-all">
+            <span>Vieta žemėlapyje</span>
+            <MapPicker lat={v.lat} lng={v.lng} onChange={(la, ln) => { set('lat', la); set('lng', ln); setFindMsg('') }} />
+            <div className="map-actions">
+              <button type="button" className="btn btn-ghost" disabled={!v.city || finding} onClick={find}>
+                {finding ? 'Ieškoma…' : 'Rasti pagal adresą'}
+              </button>
+              {hasPin && <button type="button" className="link-btn" onClick={() => { set('lat', ''); set('lng', '') }}>Pašalinti žymę</button>}
+              <span className="hint" role="status">
+                {findMsg || (hasPin
+                  ? 'Vieta pažymėta. Žymę galite pertempti. Nenorite rodyti tikslaus adreso? Pažymėkite apytiksliai.'
+                  : 'Paspauskite žemėlapyje, kad pažymėtumėte vietą. Nepažymėjus ją nustatysime pagal adresą.')}
+              </span>
+            </div>
+            {err('location')}
+          </div>
         </div>
       </fieldset>
 

@@ -20,7 +20,7 @@ export default function PrivacyPage() {
         <h2>Kam naudojame</h2>
         <p>Paskyrai sukurti ir apsaugoti, skelbimams rodyti ir valdyti, svetainės veikimui užtikrinti. Duomenų neparduodame ir nenaudojame reklamai be jūsų sutikimo.</p>
         <h2>Kur saugoma</h2>
-        <p>Duomenys saugomi Supabase infrastruktūroje Europos Sąjungoje. Prisijungimą per Google teikia Google pagal savo privatumo taisykles.</p>
+        <p>Duomenys saugomi Supabase infrastruktūroje Europos Sąjungoje. Prisijungimą per Google teikia Google pagal savo privatumo taisykles. Žemėlapius rodome naudodami OpenFreeMap (OpenStreetMap duomenys), o skelbimo adresą į koordinates paverčiame OpenStreetMap paieška – jai perduodamas tik objekto adresas.</p>
         <h2>Kiek laiko saugome</h2>
         <p>Kol turite paskyrą. Ištrynus paskyrą, kartu ištrinami profilis, visi skelbimai ir nuotraukos.</p>
         <h2>Jūsų teisės</h2>
