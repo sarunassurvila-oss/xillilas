@@ -94,7 +94,7 @@ jobs:
       - name: Žemėlapis tikroje naršyklėje
         run: |
           set +e
-          npm i -s --no-save playwright-core@1.56.1 >/dev/null 2>&1
+          npm i --no-save --no-audit --no-fund playwright-core@1.63.0 > npm.log 2>&1 || echo "::notice title=Zemelapis::npm: $(tail -3 npm.log | tr '\n' ' ' | cut -c1-200)"
           cat > m.mjs <<'JS'
           import { chromium } from 'playwright-core'
           const b = await chromium.launch({ channel: 'chrome' })
@@ -113,4 +113,4 @@ jobs:
           await b.close()
           JS
           sed -i 's/^          //' m.mjs
-          node m.mjs || echo "::notice title=Zemelapis::naršyklės patikra nepavyko"
+          node m.mjs > m.log 2>&1; cat m.log; grep -q '::notice' m.log || echo "::notice title=Zemelapis::klaida: $(grep -v '^\s*$' m.log | tail -4 | tr '\n' ' ' | cut -c1-300)"
