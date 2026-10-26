@@ -34,7 +34,7 @@ jobs:
           for qs in 'type=butas&nl=1' 'type=butas&nl=1&nf=1&fmin=2&ymin=1980&en=B&bld=M%C5%ABrinis&heat=Centrinis&fin=%C4%AErengtas&feat=Balkonas&umin=100&days=30&photos=1' 'type=sklypas&purpose=Gyvenamasis&umax=5000' 'type=namas&plmin=5&plmax=50'; do
             curl -s -o adv.html "$SITE/?$qs"
             st=$(grep -q 'Nepavyko įkelti skelbimų' adv.html && echo KLAIDA || echo gerai)
-            echo "?$qs -> $st, skydelis: $(grep -q 'id="adv-panel"' adv.html && echo atidarytas || echo NĖRA), kortelių: $(grep -o 'class="card"' adv.html | wc -l)"
+            echo "?$qs -> $st, skydelis: $(grep -q 'id="adv-panel"' adv.html && echo 'ATIDARYTAS (blogai)' || echo paslėptas), kortelių: $(grep -o 'class="card"' adv.html | wc -l)"
           done
           echo "Mygtukas „Išsami paieška“ pradžioje: $(grep -q 'Išsami paieška' home.html && echo yra || echo NĖRA)"
 
