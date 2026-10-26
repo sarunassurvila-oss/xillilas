@@ -89,15 +89,17 @@ jobs:
           txt() { python3 -c 'import sys,re,html; s=sys.stdin.read(); s=re.sub(r"(?s)<(script|style).*?</\1>","",s); print(re.sub(r"\s+"," ",html.unescape(re.sub(r"<[^>]+>"," ",s))))'; }
           code=$(curl -sL -A "$A" -o ohbi.html -w '%{http_code}' https://www.ober-haus.lt/rinkos_apzvalgos/ohbi/)
           echo "OHBI puslapis: HTTP $code"
-          links=$(grep -oE 'https://www\.ober-haus\.lt/[a-z0-9-]+/' ohbi.html | grep -vE 'rinkos_apzvalg|wp-|kontaktai|category|tag/|paslaugos|apie' | awk '!s[$0]++' | head -5)
-          echo "Nuorodos: $links"
-          for u in $links; do
+          txt < ohbi.html > o.txt
+          echo "Puslapio ištrauka: $(grep -oE '.{0,200}(Eur/m|EUR/m|€/m).{0,200}' o.txt | head -3)"
+          echo "Kainų nuorodos:"; grep -oE 'href="[^"]+"' ohbi.html | sed 's/href="//;s/"$//' | grep -iE 'kain|ohbi|indeks|brang|butu' | awk '!s[$0]++' | head -12
+          curl -sL -A "$A" -o feed.xml https://www.ober-haus.lt/feed/ ; echo "RSS: $(grep -o '<title>[^<]*' feed.xml | head -8 | sed 's/<title>//' | tr '\n' '|')"
+          for u in $(grep -oE '<link>[^<]+' feed.xml | sed 's/<link>//' | sed -n '2,12p'); do
             curl -sL -A "$A" "$u" | txt > a.txt
-            if grep -q 'Eur/m' a.txt; then
+            if grep -qE '1\.432|Panevėžyje' a.txt && grep -q 'Eur' a.txt; then
               echo "== $u"
-              grep -oE '[^.]{0,200}(Vilniuje|didmiesčiuose)[^.]{0,40}(rugsėj|spal|rugpjū)[^.]{0,300}\.' a.txt | head -4
-              grep -oE '.{0,300}1\.432.{0,100}|.{0,250}kvadratinio metro kaina.{0,250}' a.txt | head -3
-              grep -oE '(Paskelbta|[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{1,2} (spalio|rugsėjo|lapkričio) [0-9]{4})' a.txt | head -2
+              grep -oE '.{0,400}1\.432.{0,150}' a.txt | head -2
+              grep -oE '.{0,200}per pastaruosius 12 mėnesių.{0,200}' a.txt | head -2
+              grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{1,2} (spalio|rugsėjo|lapkričio)[^0-9]{0,5}[0-9]{4}' a.txt | head -2
               break
             fi
           done
