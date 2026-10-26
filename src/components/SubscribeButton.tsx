@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { subscribeSearch } from '@/app/prenumerata/actions'
-import { Icon } from '@/components/icons'
 
 type Props = {
   /** Paieškos užklausa be „?“ (searchQueryOf). */
@@ -43,14 +42,13 @@ export function SubscribeButton({ query, loggedIn, subscribed, auto }: Props) {
     const back = `/?${query ? `${query}&` : ''}prenumeruoti=1#rezultatai`
     return (
       <Link className="btn btn-ghost sub-btn" href={`/prisijungti?next=${encodeURIComponent(back)}`}>
-        <Icon name="bell" />Gauti naujus skelbimus el. paštu
+        Gauti naujus skelbimus el. paštu
       </Link>
     )
   }
   if (state === 'done') {
     return (
       <p className="sub-done" role="status">
-        <Icon name="bell" />
         <span>{msg || 'Šią paiešką prenumeruojate.'} <Link href="/mano/prenumeratos">Prenumeratos</Link></span>
       </p>
     )
@@ -58,7 +56,7 @@ export function SubscribeButton({ query, loggedIn, subscribed, auto }: Props) {
   return (
     <div className="sub-wrap">
       <button type="button" className="btn btn-ghost sub-btn" disabled={state === 'busy'} onClick={run}>
-        <Icon name="bell" />{state === 'busy' ? 'Prenumeruojama…' : 'Gauti naujus skelbimus el. paštu'}
+        {state === 'busy' ? 'Prenumeruojama…' : 'Gauti naujus skelbimus el. paštu'}
       </button>
       {state === 'error' && <span className="form-error" role="alert">{msg}</span>}
     </div>

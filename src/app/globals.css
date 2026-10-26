@@ -488,9 +488,7 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .sub-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px }
 .sub-btn { gap: 8px; height: 38px; font-size: 14px; margin-top: 10px }
 .sub-wrap .sub-btn { margin-top: 0 }
-.sub-btn .ico, .sub-done .ico { width: 18px; height: 18px; flex: none }
 .sub-done { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--ink-2); max-width: 60ch }
-.sub-done .ico { color: var(--brand); margin-top: 1px }
 .subs { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px }
 .sub { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg) }
 .sub.off { opacity: .65 }
