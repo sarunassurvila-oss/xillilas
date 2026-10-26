@@ -21,22 +21,16 @@ jobs:
             echo "::notice title=Gatves::$body"
           }
           trap finish EXIT
-          echo "node $(node -v), npm $(npm -v)" >> out.txt
-          npm i -g lt-open-data-sdk@1.2.2 > npm.log 2>&1 || echo "SDK įdiegti nepavyko: $(tail -3 npm.log)" >> out.txt
-          echo "lt-data: $(command -v lt-data || echo nėra)" >> out.txt
-          mkdir -p data/raw
-          for m in savivaldybe/Savivaldybe gyvenamojivietove/GyvenamojiVietove gatve/Gatve; do
-            name=$(basename "$m")
-            echo "== $m ==" >> out.txt
-            timeout 120 lt-data describe "datasets/gov/rc/ar/$m" > "data/raw/$name.describe.txt" 2>&1
-            echo "describe kodas $?" >> out.txt
-            head -c 1500 "data/raw/$name.describe.txt" >> out.txt; echo >> out.txt
-            timeout 1500 lt-data query "datasets/gov/rc/ar/$m" --stream --format csv -o "data/raw/$name.csv" > "data/raw/$name.log" 2>&1
-            echo "query kodas $? ; eilučių: $(wc -l < "data/raw/$name.csv" 2>/dev/null || echo 0)" >> out.txt
-            tail -3 "data/raw/$name.log" | cut -c1-300 >> out.txt
-            head -3 "data/raw/$name.csv" 2>/dev/null | cut -c1-400 >> out.txt
+          echo "== data.gov.lt ==" >> out.txt
+          for u in "https://get.data.gov.lt/datasets/gov/rc/ar/:ns" "https://get.data.gov.lt/datasets/gov/rc/ar/gatve/:ns" "https://get.data.gov.lt/datasets/gov/rc/ar/gatve/Gatve?limit(2)"; do
+            echo "$u -> $(curl -sS -m 60 -o resp.txt -w '%{http_code}' "$u")" >> out.txt; head -c 600 resp.txt | tr '\n' ' ' >> out.txt; echo >> out.txt
+          done
+          echo "== registrucentras.lt ==" >> out.txt
+          for u in "https://www.registrucentras.lt/p/1194" "https://www.registrucentras.lt/p/1186"; do
+            echo "$u -> $(curl -sSL -m 60 -A 'Mozilla/5.0' -o page.html -w '%{http_code}' "$u")" >> out.txt
+            grep -oiE 'href="[^"]+"' page.html | grep -iE 'csv|zip|json|aduomen|adr_|gatv|atviri' | sort -u | head -40 >> out.txt
           done
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/raw && git commit -qm "Adresų registro duomenys: savivaldybės, gyvenvietės, gatvės" && git push -q origin HEAD:claude/streets-data && echo "Įkelta į šaką" >> out.txt || echo "Įkelti nepavyko" >> out.txt
+          mkdir -p data/raw && touch data/raw/.keep && git add data/raw && git commit -qm "Adresų registro duomenys: savivaldybės, gyvenvietės, gatvės" && git push -q origin HEAD:claude/streets-data && echo "Įkelta į šaką" >> out.txt || echo "Įkelti nepavyko" >> out.txt
           exit 0
