@@ -15,25 +15,19 @@ SKIP = re.compile(r'(facebook|instagram|linkedin|youtube|google|twitter|x\.com|t
 domains = []
 for d in SEED:
     if d not in domains: domains.append(d)
-# Įmonių katalogas: agentūrų profiliai → jų svetainių adresai.
-profiles = []
-for city in ['vilniuje', 'kaune', 'klaipedoje', 'siauliuose', 'panevezyje', 'alytuje', 'marijampoleje', 'utenoje', 'palangoje', 'druskininkuose', 'kedainiuose', 'mazeikiuose', 'jonavoje', 'telsiuose', 'taurageje']:
-    for pg in range(1, 4):
-        url = f'https://www.visalietuva.lt/imones/nekilnojamojo-turto-agenturos/{city}' + (f'/{pg}' if pg > 1 else '')
-        page, _ = get(url)
-        links = [urllib.parse.urljoin(url, h) for h in re.findall(r'href=["\']([^"\']*/imone/[^"\'#?]+)', page)]
-        new = [l for l in dict.fromkeys(links) if l not in profiles]
-        profiles += new
-        time.sleep(0.4)
-        if not new: break
-sys.stderr.write(f'katalogo profilių: {len(profiles)}\n')
-for prof in profiles[:220]:
-    page, _ = get(prof)
+# Papildomos agentūros ir straipsniai su agentūrų sąrašais (iš jų imamos nuorodos į agentūrų svetaines).
+for d in 'vilniaus-turtas.lt nampro.lt 1partner.lt anrealty.lt relist.lt colliers.lt corpusa.lt kaunonamai.lt ntvaldos.lt'.split():
+    if d not in domains: domains.append(d)
+for url in ['https://ntzinios.lt/top-10-nekilnojamo-turto-agenturu-vilniuje-patikimiausi-brokeriai-sostineje/',
+            'https://reall.lt/nekilnojamojo-turto-agenturos-kaune',
+            'https://3karaliai.lt/info/kuria-nekilnojamojo-turto-agentura-rinktis/']:
+    page, _ = get(url)
+    src = (urllib.parse.urlparse(url).hostname or '').removeprefix('www.')
     for h in re.findall(r'href=["\'](https?://[^"\'#?]+)', page):
         host = (urllib.parse.urlparse(h).hostname or '').lower().removeprefix('www.')
-        if host and not SKIP.search(host) and host.count('.') <= 2 and host not in domains:
+        if host and host != src and not SKIP.search(host) and host.count('.') <= 2 and host not in domains:
             domains.append(host)
-    time.sleep(0.35)
+    time.sleep(0.4)
 sys.stderr.write(f'svetainių kandidatų: {len(domains)}\n')
 GENERIC = re.compile(r'^(info|office|biuras|hello|labas|sveiki|kontaktai|kontaktas|contact|contacts|nt|sales|pardavimai|nuoma|vilnius|kaunas|klaipeda|siauliai|panevezys|alytus|marijampole|utena|palanga|admin|administracija|reception|mail|uzklausos|uzklausa|agentura|klientai|partneriai|marketingas|marketing|rinkodara|centras|pagalba|support|turtas|bustas|namai|sekretore|vadyba|ofisas|kaunas\.office|vilnius\.office)$', re.I)
 EMAIL = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
