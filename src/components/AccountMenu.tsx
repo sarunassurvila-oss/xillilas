@@ -33,6 +33,7 @@ export function AccountMenu({ name, email, avatar }: { name: string; email: stri
         </div>
         <Link href="/mano">Mano skelbimai</Link>
         <Link href="/mano/naujas">Įdėti skelbimą</Link>
+        <Link href="/mano/prenumeratos">Prenumeratos</Link>
         <Link href="/mano/paskyra">Profilis ir kontaktai</Link>
         <form action="/auth/signout" method="post">
           <button type="submit">Atsijungti</button>

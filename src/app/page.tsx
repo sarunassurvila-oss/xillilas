@@ -5,12 +5,13 @@ import { ListingsMap, type MapPoint } from '@/components/ListingsMap'
 import { SearchForm } from '@/components/SearchForm'
 import { SetupNotice } from '@/components/SetupNotice'
 import { SortSelect } from '@/components/SortSelect'
+import { SubscribeButton } from '@/components/SubscribeButton'
 import { isConfigured } from '@/lib/env'
 import { MARKET_PRICES } from '@/lib/market-prices'
-import { ADV_DEFAULTS, PAGE_SIZE, advApplies, hrefFor, parseFilters, roomsApply, searchWords, type Filters, type SearchParams } from '@/lib/filters'
+import { ADV_DEFAULTS, PAGE_SIZE, advApplies, hrefFor, parseFilters, roomsApply, searchQueryOf, searchWords, type Filters, type SearchParams } from '@/lib/filters'
 import { TYPES, addrOf, coverOf, fmt, fullTitle, nomWord, photoUrl, type Listing } from '@/lib/listings'
 import { skyline } from '@/lib/picture'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getSessionUser } from '@/lib/supabase/server'
 
 const CARD_COLUMNS =
   'id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,energy,purpose,features,published_at,listing_photos(path,position)'
@@ -125,14 +126,17 @@ function chipsFor(f: Filters) {
 
 export default async function Home({ searchParams }: { searchParams: Promise<SearchParams> }) {
   if (!isConfigured) return <SetupNotice />
-  const f = parseFilters(await searchParams)
-  const supabase = await createClient()
+  const sp = await searchParams
+  const f = parseFilters(sp)
+  const { supabase, user } = await getSessionUser()
   const isMap = f.view === 'map'
-  const [listRes, countsRes, locRes, mapRes] = await Promise.all([
+  const subQuery = searchQueryOf(f)
+  const [listRes, countsRes, locRes, mapRes, subRes] = await Promise.all([
     queryListings(supabase, f),
     supabase.rpc('listing_type_counts', { p_deal: f.deal }),
     supabase.rpc('listing_locations'),
     isMap ? queryListings(supabase, f, 'map') : null,
+    user ? supabase.from('saved_searches').select('id').eq('query', subQuery).eq('active', true).maybeSingle() : null,
   ])
   const points: MapPoint[] = ((mapRes?.data ?? []) as unknown as Listing[])
     .filter((l) => l.lat != null && l.lng != null)
@@ -184,6 +188,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           <div>
             <h2 id="resTitle">{title}</h2>
             <p className="res-count">{total ? `Rasta ${fmt(total)} ${nomWord(total)}` : 'Skelbimų nerasta'}</p>
+            <SubscribeButton key={subQuery} query={subQuery} loggedIn={Boolean(user)} subscribed={Boolean(subRes?.data)} auto={sp.prenumeruoti === '1'} />
           </div>
           <div className="res-tools">
             <nav className="viewsw" aria-label="Rodymo būdas">

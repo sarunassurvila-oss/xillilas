@@ -15,6 +15,7 @@ export default function PrivacyPage() {
           <li><b>Kuriant paskyrą el. paštu:</b> el. pašto adresą ir slaptažodį. Slaptažodis saugomas tik užšifruotas (kaip maiša), todėl jo nematome net mes. Šiuo adresu siunčiame tik paskyros patvirtinimo ir slaptažodžio atkūrimo laiškus.</li>
           <li><b>Profilyje:</b> vardą ar įmonės pavadinimą, telefono numerį ir skelbėjo tipą.</li>
           <li><b>Skelbimuose:</b> objekto aprašymą, adresą, kainą, nuotraukas ir kontaktus, kuriuos patys įrašote. Šie duomenys yra vieši.</li>
+          <li><b>Prenumeratose:</b> pasirinktus paieškos filtrus. Apie naujus tinkančius skelbimus rašome jūsų paskyros el. pašto adresu (laiškus siunčia Brevo). Atsisakyti galite kiekvieno laiško apačioje arba puslapyje „Prenumeratos“.</li>
           <li><b>Techniniai duomenys:</b> sesijos slapukai, būtini prisijungimui išlaikyti.</li>
         </ul>
         <h2>Kam naudojame</h2>

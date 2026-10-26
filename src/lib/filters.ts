@@ -1,4 +1,4 @@
-import { BUILDINGS, ENERGY, FEATURES, FINISHES, HEATING, PURPOSES, TYPE_KEYS, type Deal, type ListingType } from '@/lib/listings'
+import { BUILDINGS, ENERGY, FEATURES, FINISHES, HEATING, PURPOSES, TYPES, TYPE_KEYS, fmt, type Deal, type ListingType } from '@/lib/listings'
 
 export const SORTS = {
   new: 'Naujausi',
@@ -188,4 +188,57 @@ export function searchWords(q: string) {
     .split(/[^a-z0-9-]+/)
     .filter((w) => w.length >= 2)
     .slice(0, 5)
+}
+
+// ---------------------------------------------------------------------------
+// Prenumeratos: išsaugota paieška
+// ---------------------------------------------------------------------------
+
+/** Paieškos adresas be rodymo nustatymų (puslapio, rikiavimo, žemėlapio) – pagal jį atpažįstama ta pati paieška. */
+export const searchQueryOf = (f: Filters) => toQuery({ ...f, page: 1, sort: 'new', view: 'list' })
+
+/** Filtrai duomenų bazės funkcijai search_matches (supabase/migrations/0006). Taikomi tik kategorijai tinkantys. */
+export function criteriaOf(f: Filters) {
+  const t = f.type
+  const c: Record<string, unknown> = { deal: f.deal }
+  const num = (k: keyof Filters) => { if (f[k] != null) c[k] = f[k] }
+  if (t !== 'all') c.type = t
+  if (f.city) {
+    c.city = f.city
+    if (f.districts.length) c.districts = f.districts
+  }
+  ;(['pmin', 'pmax', 'amin', 'amax', 'umin', 'umax'] as const).forEach(num)
+  if (f.rooms.length && roomsApply(t)) c.rooms = f.rooms
+  const words = searchWords(f.q)
+  if (words.length) c.words = words
+  if (advApplies('floor', t)) {
+    num('fmin'); num('fmax')
+    if (f.notFirst) c.notFirst = true
+    if (f.notLast) c.notLast = true
+  }
+  if (advApplies('year', t)) { num('ymin'); num('ymax') }
+  if (advApplies('plot', t)) { num('plmin'); num('plmax') }
+  for (const k of ['building', 'heating', 'finish'] as const) if (advApplies(k, t) && f[k].length) c[k] = f[k]
+  if (advApplies('energy', t) && f.energy) c.energy = f.energy
+  if (advApplies('purpose', t) && f.purpose) c.purpose = f.purpose
+  if (f.features.length) c.features = f.features
+  if (f.photos) c.photos = true
+  return c
+}
+
+/** Trumpas paieškos aprašymas: „Butai pardavimui · Vilnius · Žirmūnai · iki 200 000 € · +2 filtrai“. */
+export function describeFilters(f: Filters) {
+  const parts = [`${f.type === 'all' ? 'Visi skelbimai' : TYPES[f.type].many} ${f.deal === 'rent' ? 'nuomai' : 'pardavimui'}`]
+  if (f.city) parts.push(f.city)
+  if (f.city && f.districts.length) parts.push(f.districts.join(', '))
+  const unitP = f.deal === 'rent' ? '€/mėn.' : '€', unitA = f.type === 'sklypas' ? 'a' : 'm²'
+  const range = (a: number | null, b: number | null, u: string) =>
+    a != null && b != null ? `${fmt(a)}–${fmt(b)} ${u}` : a != null ? `nuo ${fmt(a)} ${u}` : `iki ${fmt(b!)} ${u}`
+  if (f.pmin != null || f.pmax != null) parts.push(range(f.pmin, f.pmax, unitP))
+  if (f.amin != null || f.amax != null) parts.push(range(f.amin, f.amax, unitA))
+  if (f.rooms.length && roomsApply(f.type)) parts.push(`${f.rooms.map((r) => (r === 5 ? '5+' : r)).join(', ')} kamb.`)
+  if (f.q) parts.push(`„${f.q}“`)
+  const n = advancedCount(f)
+  if (n) parts.push(`+${n} ${n === 1 ? 'filtras' : n < 10 ? 'filtrai' : 'filtrų'}`)
+  return parts.join(' · ').slice(0, 300)
 }
