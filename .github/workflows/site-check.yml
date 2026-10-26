@@ -87,22 +87,15 @@ jobs:
           {
           A='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
           txt() { python3 -c 'import sys,re,html; s=sys.stdin.read(); s=re.sub(r"(?s)<(script|style).*?</\1>","",s); print(re.sub(r"\s+"," ",html.unescape(re.sub(r"<[^>]+>"," ",s))))'; }
-          code=$(curl -sL -A "$A" -o ohbi.html -w '%{http_code}' https://www.ober-haus.lt/rinkos_apzvalgos/ohbi/)
-          echo "OHBI puslapis: HTTP $code"
-          txt < ohbi.html > o.txt
-          echo "Puslapio ištrauka: $(grep -oE '.{0,200}(Eur/m|EUR/m|€/m).{0,200}' o.txt | head -3)"
-          echo "Kainų nuorodos:"; grep -oE 'href="[^"]+"' ohbi.html | sed 's/href="//;s/"$//' | grep -iE 'kain|ohbi|indeks|brang|butu' | awk '!s[$0]++' | head -12
-          curl -sL -A "$A" -o feed.xml https://www.ober-haus.lt/feed/ ; echo "RSS: $(grep -o '<title>[^<]*' feed.xml | head -8 | sed 's/<title>//' | tr '\n' '|')"
-          for u in $(grep -oE '<link>[^<]+' feed.xml | sed 's/<link>//' | sed -n '2,12p'); do
-            curl -sL -A "$A" "$u" | txt > a.txt
-            if grep -qE '1\.432|Panevėžyje' a.txt && grep -q 'Eur' a.txt; then
-              echo "== $u"
-              grep -oE '.{0,400}1\.432.{0,150}' a.txt | head -2
-              grep -oE '.{0,200}per pastaruosius 12 mėnesių.{0,200}' a.txt | head -2
-              grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}|[0-9]{1,2} (spalio|rugsėjo|lapkričio)[^0-9]{0,5}[0-9]{4}' a.txt | head -2
-              break
-            fi
-          done
+          U=https://www.ober-haus.lt/rinkos_apzvalga/ohbi-apzvalga-2026-m-rugsejo-men/
+          curl -sL -A "$A" "$U" | txt > p.txt
+          echo "Puslapis ($(wc -c < p.txt) simb.):"
+          grep -oE '.{0,700}(Eur/m|EUR/m|€/m|kv\. m).{0,500}' p.txt | head -3
+          curl -sL -A "$A" -o r.pdf https://www.ober-haus.lt/wp-content/uploads/OHBI-apzvalga-2026-rugsejis.pdf
+          echo "PDF: $(file -b r.pdf | cut -c1-40)"
+          (command -v pdftotext >/dev/null || sudo apt-get install -y -qq poppler-utils >/dev/null 2>&1)
+          pdftotext -layout r.pdf r.txt 2>/dev/null
+          grep -nE 'Vilni|Kaun|Klaip|Šiaul|Panev|Eur|EUR|12 mėn|metin|rugsėj|Paskelbta|2026' r.txt | head -45
           } > oh.txt 2>&1
           cat oh.txt
           body=$(sed -e 's/%/%25/g' oh.txt | sed -e ':a;N;$!ba;s/\n/%0A/g')
