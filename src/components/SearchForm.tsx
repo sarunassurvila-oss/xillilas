@@ -30,7 +30,8 @@ const ADV_EMPTY: Partial<Form> = {
   fmin: '', fmax: '', ymin: '', ymax: '', plmin: '', plmax: '', umin: '', umax: '',
   notFirst: false, notLast: false, photos: false, days: '', energy: '', purpose: '', building: [], heating: [], finish: [], features: [],
 }
-// Išsamios paieškos skydelio būsena išlieka, kol naršoma svetainėje.
+// Skydelis atsidaro tik paspaudus mygtuką; atidarytas išlieka, kol naršoma svetainėje.
+// Reikšmė keičiama tik naršyklėje (paspaudus), todėl serveris visada rodo jį uždarytą.
 let advOpenMemory = false
 
 export function SearchForm({ filters, locations, total }: { filters: Filters; locations: Location[]; total: number }) {
@@ -38,10 +39,7 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
   const [form, setForm] = useState<Form>(() => toForm(filters))
   const [pending, startTransition] = useTransition()
   const advCount = advancedCount(filters)
-  const [advOpen, setAdvOpen] = useState(() => {
-    if (advCount > 0) advOpenMemory = true
-    return advOpenMemory
-  })
+  const [advOpen, setAdvOpen] = useState(() => advOpenMemory)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Visi Lietuvos miestai ir papildomai vietos, kurias skelbėjai įrašė patys.
