@@ -47,6 +47,12 @@ jobs:
           ID=$(grep -oE '/skelbimas/[0-9]+' home.html | head -1)
           [ -n "$ID" ] && echo "Skelbimo $ID vietos žemėlapis: $(curl -s "$SITE$ID" | grep -q 'Vieta žemėlapyje' && echo yra || echo nėra)"
 
+          echo "== Prenumeratos =="
+          echo "Mygtukas rezultatuose: $(grep -q 'Gauti naujus skelbimus el. paštu' home.html && echo yra || echo NĖRA)"
+          echo "/prenumerata/atsisakyti: $(curl -s "$SITE/prenumerata/atsisakyti?t=00000000-0000-0000-0000-000000000000" | grep -o '<h1>[^<]*' | head -1 | sed 's/<h1>//')"
+          echo "/mano/prenumeratos be prisijungimo: $(curl -s -o /dev/null -w '%{http_code} → %{redirect_url}' "$SITE/mano/prenumeratos")"
+          echo "/api/atsisakyti (POST, neteisingas žetonas): $(curl -s -X POST "$SITE/api/atsisakyti?t=x")"
+
           echo "== Paleidimui =="
           echo "robots.txt: $(curl -s -o /dev/null -w '%{http_code}' "$SITE/robots.txt"), sitemap.xml: $(curl -s -o sm.xml -w '%{http_code}' "$SITE/sitemap.xml") ($(grep -o '<loc>' sm.xml | wc -l) adresai, skelbimų: $(grep -o '/skelbimas/' sm.xml | wc -l))"
           echo "og:image: $(grep -oE 'property="og:image" content="[^"]+' home.html | sed 's/.*content="//' | head -1) -> $(curl -s -o /dev/null -w '%{http_code}' "$SITE/og.png")"
