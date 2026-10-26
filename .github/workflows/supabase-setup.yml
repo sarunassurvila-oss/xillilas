@@ -18,6 +18,10 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_SENDER: ${{ secrets.SMTP_SENDER }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SITE: https://xillilas.vercel.app
           VERCEL_PROJECT: xillilas
           VERCEL_SCOPE: sarunassurvila-1289
@@ -114,6 +118,16 @@ jobs:
             [ -n "$PUB" ] || { log "KLAIDA: nerastas viešasis (publishable) raktas"; return; }
             URL="https://$REF.supabase.co"
 
+            # Laiškų siuntimo paslauga (pvz. Brevo). Be jos Supabase laiškus siunčia tik projekto komandai.
+            SMTP_USER=$(printf '%s' "${SMTP_USER:-}" | tr -d '[:space:]'); SMTP_PASS=$(printf '%s' "${SMTP_PASS:-}" | tr -d '[:space:]')
+            SMTP_SENDER=$(printf '%s' "${SMTP_SENDER:-}" | tr -d '[:space:]'); SMTP_HOST=$(printf '%s' "${SMTP_HOST:-smtp-relay.brevo.com}" | tr -d '[:space:]')
+            if [ -n "$SMTP_USER" ] && [ -n "$SMTP_PASS" ] && [ -n "$SMTP_SENDER" ]; then
+              m=$(curl -s "${H[@]}" -X PATCH "$API/projects/$REF/config/auth" \
+                -d "$(jq -n --arg h "${SMTP_HOST:-smtp-relay.brevo.com}" --arg u "$SMTP_USER" --arg p "$SMTP_PASS" --arg f "$SMTP_SENDER" '{smtp_host: $h, smtp_port: "587", smtp_user: $u, smtp_pass: $p, smtp_admin_email: $f, smtp_sender_name: "bustas.lt", smtp_max_frequency: 30}')")
+              if [ -n "$(echo "$m" | jq -r '.smtp_host // empty')" ]; then log "Laiškų paslauga prijungta: $(echo "$m" | jq -r '.smtp_host'), siuntėjas $(echo "$m" | jq -r '.smtp_admin_email')"; else log "KLAIDA: laiškų paslaugos prijungti nepavyko: $(echo "$m" | jq -c '.message // .' | cut -c1-200)"; fi
+            else
+              log "Laiškų paslauga: GitHub'e nėra SMTP_USER, SMTP_PASS ir SMTP_SENDER"
+            fi
             # El. paštas + slaptažodis su patvirtinimo laišku. Laiškų nuorodos veda į /auth/confirm (veikia ir kitame įrenginyje).
             CONFIRM_HTML='<h2>Sveiki!</h2><p>Paspauskite nuorodą, kad patvirtintumėte el. pašto adresą ir prisijungtumėte prie bustas.lt:</p><p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/mano">Patvirtinti el. paštą</a></p><p>Jei paskyros nekūrėte, šį laišką galite ignoruoti.</p>'
             RECOVERY_HTML='<h2>Slaptažodžio atkūrimas</h2><p>Paspauskite nuorodą ir susikurkite naują slaptažodį:</p><p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/slaptazodis/naujas">Sukurti naują slaptažodį</a></p><p>Jei slaptažodžio keisti neprašėte, šį laišką galite ignoruoti.</p>'
