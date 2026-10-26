@@ -114,9 +114,12 @@ jobs:
             [ -n "$PUB" ] || { log "KLAIDA: nerastas viešasis (publishable) raktas"; return; }
             URL="https://$REF.supabase.co"
 
+            # El. paštas + slaptažodis su patvirtinimo laišku. Laiškų nuorodos veda į /auth/confirm (veikia ir kitame įrenginyje).
+            CONFIRM_HTML='<h2>Sveiki!</h2><p>Paspauskite nuorodą, kad patvirtintumėte el. pašto adresą ir prisijungtumėte prie bustas.lt:</p><p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/mano">Patvirtinti el. paštą</a></p><p>Jei paskyros nekūrėte, šį laišką galite ignoruoti.</p>'
+            RECOVERY_HTML='<h2>Slaptažodžio atkūrimas</h2><p>Paspauskite nuorodą ir susikurkite naują slaptažodį:</p><p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/slaptazodis/naujas">Sukurti naują slaptažodį</a></p><p>Jei slaptažodžio keisti neprašėte, šį laišką galite ignoruoti.</p>'
             a=$(curl -s "${H[@]}" -X PATCH "$API/projects/$REF/config/auth" \
-              -d "$(jq -n --arg s "$SITE" '{site_url: $s, uri_allow_list: ($s + "/auth/callback,http://localhost:3000/auth/callback"), external_email_enabled: true, mailer_autoconfirm: true, password_min_length: 8, mailer_secure_email_change_enabled: true}')")
-            if [ "$(echo "$a" | jq -r '.site_url // empty')" = "$SITE" ]; then log "Prisijungimo adresai nustatyti ($SITE). Slapyvardžių paskyros: $(echo "$a" | jq -r 'if .external_email_enabled and .mailer_autoconfirm then "įjungtos" elif .external_email_enabled then "el. paštas įjungtas, bet reikalauja patvirtinimo" else "išjungtos" end'), min. slaptažodžio ilgis: $(echo "$a" | jq -r '.password_min_length')"; else log "ĮSPĖJIMAS: prisijungimo adresų nustatyti nepavyko: $(echo "$a" | jq -c '.message // .' | cut -c1-200)"; fi
+              -d "$(jq -n --arg s "$SITE" --arg c "$CONFIRM_HTML" --arg r "$RECOVERY_HTML" '{site_url: $s, uri_allow_list: ($s + "/auth/callback,http://localhost:3000/auth/callback"), external_email_enabled: true, mailer_autoconfirm: false, password_min_length: 8, mailer_secure_email_change_enabled: true, mailer_subjects_confirmation: "Patvirtinkite el. paštą – bustas.lt", mailer_templates_confirmation_content: $c, mailer_subjects_recovery: "Slaptažodžio atkūrimas – bustas.lt", mailer_templates_recovery_content: $r}')")
+            if [ "$(echo "$a" | jq -r '.site_url // empty')" = "$SITE" ]; then log "Prisijungimo adresai nustatyti ($SITE). El. pašto paskyros: $(echo "$a" | jq -r 'if .external_email_enabled and (.mailer_autoconfirm | not) then "įjungtos, su patvirtinimo laišku" elif .external_email_enabled then "įjungtos BE patvirtinimo" else "išjungtos" end'), min. slaptažodžio ilgis: $(echo "$a" | jq -r '.password_min_length'), laiškų tema: $(echo "$a" | jq -r '.mailer_subjects_confirmation'), SMTP: $(echo "$a" | jq -r 'if (.smtp_host // "") == "" then "Supabase numatytasis (tik komandos nariams)" else .smtp_host end')"; else log "ĮSPĖJIMAS: prisijungimo adresų nustatyti nepavyko: $(echo "$a" | jq -c '.message // .' | cut -c1-200)"; fi
             GOOGLE_CLIENT_ID=$(printf '%s' "${GOOGLE_CLIENT_ID:-}" | tr -d '[:space:]')
             GOOGLE_CLIENT_SECRET=$(printf '%s' "${GOOGLE_CLIENT_SECRET:-}" | tr -d '[:space:]')
             if [ -n "$GOOGLE_CLIENT_ID" ] && [ -n "$GOOGLE_CLIENT_SECRET" ]; then
@@ -127,21 +130,9 @@ jobs:
             g=$(echo "$a" | jq -r '.external_google_enabled // false')
             log "Google prisijungimas Supabase: $([ "$g" = true ] && echo įjungtas || echo dar neįjungtas)"
 
-            # Slapyvardžių paskyrų patikra tikrame projekte: bandomoji paskyra sukuriama ir ištrinama.
-            AUTH="$URL/auth/v1"
-            PH=(-H "apikey: $PUB" -H "Content-Type: application/json")
-            for i in $(seq 1 24); do s=$(curl -s "${PH[@]}" "$AUTH/settings"); [ "$(echo "$s" | jq -r '.external.email and .mailer_autoconfirm')" = true ] && break; sleep 5; done
-            log "Supabase nustatymai: $(echo "$s" | jq -c '{email: .external.email, google: .external.google, autoconfirm: .mailer_autoconfirm}')"
-            U="zz-bandymas-$RANDOM"
-            r=$(curl -s "${PH[@]}" -X POST "$AUTH/signup" -d "$(jq -n --arg e "$U@slapyvardis.invalid" --arg u "$U" '{email: $e, password: "Bandymas-12345", data: {username: $u}}')")
-            log "Bandomoji registracija slapyvardžiu: $(echo "$r" | jq -c '{prisijungta: (.access_token != null), code: (.error_code // null), msg: ((.msg // .message // "") | .[0:120])}')"
-            r=$(curl -s "${PH[@]}" -X POST "$AUTH/token?grant_type=password" -d "$(jq -n --arg e "$U@slapyvardis.invalid" '{email: $e, password: "Bandymas-12345"}')")
-            log "Bandomasis prisijungimas: $(echo "$r" | jq -c '{prisijungta: (.access_token != null), code: (.error_code // null)}')"
-            r=$(curl -s "${PH[@]}" -X POST "$AUTH/signup" -d '{"email": "zz-apsauga@kitas.invalid", "password": "Bandymas-12345"}')
-            log "Registracija ne slapyvardžio adresu (turi būti atmesta): $(echo "$r" | jq -c '{prisijungta: (.access_token != null), msg: ((.msg // .message // "") | .[0:120])}')"
-            log "Profilis bandomajai paskyrai sukurtas: $(q "select count(*) as n from public.profiles p join auth.users u on u.id = p.id where u.email = '$U@slapyvardis.invalid'" | jq -r '.[0].n')"
-            q "delete from auth.users where email in ('$U@slapyvardis.invalid', 'zz-apsauga@kitas.invalid')" >/dev/null
-            log "Bandomosios paskyros ištrintos, liko: $(q "select count(*) as n from auth.users where email like 'zz-%'" | jq -r '.[0].n')"
+            for i in $(seq 1 24); do st=$(curl -s -H "apikey: $PUB" "$URL/auth/v1/settings"); [ "$(echo "$st" | jq -r '.mailer_autoconfirm')" = false ] && break; sleep 5; done
+            log "Supabase nustatymai: $(echo "$st" | jq -c '{email: .external.email, google: .external.google, autoconfirm: .mailer_autoconfirm}')"
+            log "Slapyvardžių paskyrų sukurta: $(q "select count(*) as n from auth.users where email like '%@slapyvardis.invalid'" | jq -r '.[0].n')"
 
             log "NEXT_PUBLIC_SUPABASE_URL=$URL"
             log "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUB"
