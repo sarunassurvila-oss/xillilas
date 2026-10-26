@@ -125,6 +125,13 @@ jobs:
               m=$(curl -s "${H[@]}" -X PATCH "$API/projects/$REF/config/auth" \
                 -d "$(jq -n --arg h "${SMTP_HOST:-smtp-relay.brevo.com}" --arg u "$SMTP_USER" --arg p "$SMTP_PASS" --arg f "$SMTP_SENDER" '{smtp_host: $h, smtp_port: "587", smtp_user: $u, smtp_pass: $p, smtp_admin_email: $f, smtp_sender_name: "bustas.lt", smtp_max_frequency: 30}')")
               if [ -n "$(echo "$m" | jq -r '.smtp_host // empty')" ]; then log "Laiškų paslauga prijungta: $(echo "$m" | jq -r '.smtp_host'), siuntėjas $(echo "$m" | jq -r '.smtp_admin_email')"; else log "KLAIDA: laiškų paslaugos prijungti nepavyko: $(echo "$m" | jq -c '.message // .' | cut -c1-200)"; fi
+              # Bandomasis laiškas į siuntėjo adresą: patikrina Brevo prisijungimą ir siuntimą.
+              printf 'From: bustas.lt <%s>\r\nTo: <%s>\r\nSubject: bustas.lt: laisku siuntimo bandymas\r\nContent-Type: text/plain; charset=utf-8\r\n\r\nLaiškų siuntimas veikia. Šį laišką išsiuntė svetainės nustatymų patikra.\r\n' "$SMTP_SENDER" "$SMTP_SENDER" > mail.txt
+              if out=$(curl -sS --url "smtp://$SMTP_HOST:587" --ssl-reqd --user "$SMTP_USER:$SMTP_PASS" --mail-from "$SMTP_SENDER" --mail-rcpt "$SMTP_SENDER" -T mail.txt 2>&1); then
+                log "Bandomasis laiškas išsiųstas į siuntėjo adresą"
+              else
+                log "KLAIDA: bandomojo laiško išsiųsti nepavyko: $(echo "$out" | sed "s/$SMTP_PASS/***/g" | tail -2 | tr '\n' ' ' | cut -c1-250)"
+              fi
             else
               log "Laiškų paslauga: GitHub'e nėra SMTP_USER, SMTP_PASS ir SMTP_SENDER"
             fi
