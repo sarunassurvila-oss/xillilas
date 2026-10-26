@@ -27,11 +27,11 @@ jobs:
           grep -q 'Nepavyko įkelti skelbimų' home.html && echo "BUSENA1: DB_KLAIDA"
           grep -q 'Skelbimų dar nėra' home.html && echo "BUSENA1: DB_VEIKIA_SKELBIMU_NERA"
           echo "Kortelių: $(grep -o 'class="card"' home.html | wc -l)"
-          echo "Kainų lentelė: $(grep -q 'Butų kainos miestuose' home.html && echo yra || echo NĖRA); miestai: $(grep -oE '(Vilnius|Kaunas|Klaipėda|Panevėžys|Šiauliai|Alytus)</a>' home.html | sed 's#</a>##' | tr '\n' ' ')"
-          echo "Kainos: $(for n in 3290 4314 3046 2776 1835 1804 1546; do a=${n:0:1}; b=${n:1}; LC_ALL=C.UTF-8 grep -qP "${a}[\x{00A0}\x{202F} ]${b}" home.html && printf '%s✓ ' $n || printf '%s✗ ' $n; done)"
+          echo "Kainų lentelė: $(grep -q 'Butų kainos miestuose' home.html && echo yra || echo NĖRA), šaltinis: $(grep -q 'Ober-Haus' home.html && echo Ober-Haus || echo kitas), aruodas paminėtas: $(grep -qi 'aruodas' home.html && echo TAIP || echo ne); miestai: $(grep -oE '(Vilnius|Kaunas|Klaipėda|Šiauliai|Panevėžys|Alytus)</a>' home.html | sed 's#</a>##' | tr '\n' ' ')"
+          echo "Kainos: $(for n in 3197 2339 2103 1457 1432; do a=${n:0:1}; b=${n:1}; LC_ALL=C.UTF-8 grep -qP "${a}[\x{00A0}\x{202F} ]${b}" home.html && printf '%s✓ ' $n || printf '%s✗ ' $n; done)"
 
           echo "== Išsami paieška =="
-          for qs in 'type=butas&nl=1' 'type=butas&nl=1&nf=1&fmin=2&ymin=1980&en=B&bld=M%C5%ABrinis&heat=Centrinis&fin=%C4%AErengtas&feat=Balkonas&umin=100&days=30&photos=1' 'type=sklypas&purpose=Gyvenamasis&umax=5000' 'type=namas&plmin=5&plmax=50'; do
+          for qs in 'type=butas&nl=1' 'type=butas&en=A%2B%2B' 'type=butas&nl=1&nf=1&fmin=2&ymin=1980&en=B&bld=M%C5%ABrinis&heat=Centrinis&fin=%C4%AErengtas&feat=Balkonas&umin=100&days=30&photos=1' 'type=sklypas&purpose=Gyvenamasis&umax=5000' 'type=namas&plmin=5&plmax=50'; do
             curl -s -o adv.html "$SITE/?$qs"
             st=$(grep -q 'Nepavyko įkelti skelbimų' adv.html && echo KLAIDA || echo gerai)
             echo "?$qs -> $st, skydelis: $(grep -q 'id="adv-panel"' adv.html && echo 'ATIDARYTAS (blogai)' || echo paslėptas), kortelių: $(grep -o 'class="card"' adv.html | wc -l)"
@@ -81,22 +81,3 @@ jobs:
           body=$(sed -e 's/%/%25/g' out.txt | sed -e ':a;N;$!ba;s/\n/%0A/g')
           echo "::notice title=Patikra::$body"
 
-      - name: Ober-Haus butų kainų indeksas
-        run: |
-          set +e
-          {
-          A='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
-          txt() { python3 -c 'import sys,re,html; s=sys.stdin.read(); s=re.sub(r"(?s)<(script|style).*?</\1>","",s); print(re.sub(r"\s+"," ",html.unescape(re.sub(r"<[^>]+>"," ",s))))'; }
-          U=https://www.ober-haus.lt/rinkos_apzvalga/ohbi-apzvalga-2026-m-rugsejo-men/
-          curl -sL -A "$A" "$U" | txt > p.txt
-          echo "Puslapis ($(wc -c < p.txt) simb.):"
-          grep -oE '.{0,700}(Eur/m|EUR/m|€/m|kv\. m).{0,500}' p.txt | head -3
-          curl -sL -A "$A" -o r.pdf https://www.ober-haus.lt/wp-content/uploads/OHBI-apzvalga-2026-rugsejis.pdf
-          echo "PDF: $(file -b r.pdf | cut -c1-40)"
-          pip install -q pypdf >/dev/null 2>&1
-          python3 -c 'import pypdf; r=pypdf.PdfReader("r.pdf"); print("\n".join(p.extract_text() or "" for p in r.pages))' > r.txt 2>&1
-          grep -nE 'Vilni|Kaun|Klaip|Šiaul|Panev|Eur|EUR|12 mėn|metin|rugsėj|Paskelbta|2026' r.txt | head -45
-          } > oh.txt 2>&1
-          cat oh.txt
-          body=$(sed -e 's/%/%25/g' oh.txt | sed -e ':a;N;$!ba;s/\n/%0A/g')
-          echo "::notice title=OberHaus::$body"
