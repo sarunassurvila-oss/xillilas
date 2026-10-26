@@ -127,15 +127,13 @@ jobs:
           JS
           sed -i 's/^          //' m.mjs
           node m.mjs > m.log 2>&1; cat m.log; grep -q '::notice' m.log || echo "::notice title=Zemelapis::klaida: $(grep -v '^\s*$' m.log | tail -4 | tr '\n' ' ' | cut -c1-300)"
-
-      - name: Domenų laisvumas (.lt)
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/site-check
+          sparse-checkout: .github
+      - name: NT agentūrų bendri kontaktai
         run: |
-          set +e
-          out=""
-          for n in butu namu bustu gyventi butukas muras namai24 butai24 kambarys kambariai adresai namynas butynas bustynas kiemai erdves vietos kvadras nuomai nt24 namukai butas24 namas24 kvadra kvadrai buteliai namuz busturg sienos namon pirkt nuomok nuomos butuka namuku ntas ntai rastas namuka; do
-            r=$(printf 'get 1.0 %s.lt\n' "$n" | timeout 8 nc das.domreg.lt 4343 2>/dev/null | grep -i '^Status:' | head -1 | sed 's/Status: *//I')
-            [ -z "$r" ] && r=$(timeout 8 whois -h whois.domreg.lt "$n.lt" 2>/dev/null | grep -i '^Status:' | head -1 | sed 's/Status: *//I')
-            out="$out$n.lt=${r:-?}; "
-            sleep 0.4
-          done
-          echo "::notice title=Domenai::$out"
+          python3 .github/agencies.py > agencies.csv 2> stats.txt
+          cat stats.txt
+          body=$( (cat stats.txt; cat agencies.csv) | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::notice title=Agenturos::$body"
