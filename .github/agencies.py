@@ -25,7 +25,7 @@ for path in ['', 'vilnius', 'kaunas', 'klaipeda', 'siauliai', 'panevezys', 'alyt
     time.sleep(0.3)
 GENERIC = re.compile(r'^(info|office|biuras|hello|labas|sveiki|kontaktai|kontaktas|contact|contacts|nt|sales|pardavimai|nuoma|vilnius|kaunas|klaipeda|siauliai|panevezys|alytus|marijampole|utena|palanga|admin|administracija|reception|mail|uzklausos|uzklausa|agentura|klientai|partneriai|marketingas|marketing|rinkodara|centras|pagalba|support|turtas|bustas|namai|sekretore|vadyba|ofisas|kaunas\.office|vilnius\.office)$', re.I)
 EMAIL = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
-out = io.StringIO(); w = csv.writer(out, delimiter=';')
+out = io.StringIO(); w = csv.writer(out, delimiter=';', lineterminator='\n')
 w.writerow(['Agentūra (svetainė)', 'Bendras el. paštas', 'Šaltinis'])
 n_ok = 0
 for d in domains[:140]:
@@ -52,5 +52,7 @@ for d in domains[:140]:
         n_ok += 1
         w.writerow([d, ', '.join(found[:4]), src])
     time.sleep(0.4)
+page, _ = get('https://www.ntagenturos.lt/vilnius')
+sys.stderr.write('katalogas: ' + str(len(page)) + ' simb.; nuorodų pavyzdžiai: ' + ' '.join(sorted(set(re.findall(r'href=["\']([^"\']{3,80})', page)))[:40]) + '\n')
 sys.stdout.write(out.getvalue())
 sys.stderr.write(f'tikrinta svetainių: {min(len(domains),140)}, su bendru el. paštu: {n_ok}\n')
