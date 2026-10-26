@@ -109,7 +109,7 @@ jobs:
           const prices = await p.locator('.mk-price').count(), clusters = await p.locator('.mk-cluster').count()
           const tiles = await p.evaluate(() => performance.getEntriesByType('resource').filter((r) => r.name.includes('openfreemap')).length)
           let popup = '-'
-          if (prices) { await p.locator('.mk-price').first().click(); await p.waitForTimeout(600); popup = await p.locator('.mpop').getAttribute('href').catch(() => 'nėra') }
+          if (prices) { await p.locator('.mk-price').first().click(); await p.waitForTimeout(600); popup = await p.locator('.mpop-main').getAttribute('href').catch(() => 'nėra') }
           const head = await p.locator('.maplist-head').innerText().catch(() => '-')
           const cards = await p.locator('.mcard').count()
           const gmaps = await p.locator('.mpop-gmaps').getAttribute('href').catch(() => '-')
