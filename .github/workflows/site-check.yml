@@ -47,7 +47,7 @@ jobs:
           echo "== 2. Supabase =="
           curl -s -o login.html "$SITE/prisijungti"
           grep -q 'Tęsti su Google' login.html && echo "Prisijungimo mygtukas: yra"
-          echo "Slapyvardžio forma: $(grep -q 'class="name-auth"' login.html && echo rodoma || echo nerodoma)"
+          echo "El. pašto forma: $(grep -q 'class="name-auth"' login.html && echo rodoma || echo nerodoma)"
           for js in $(cat home.html login.html | grep -oE '/_next/static/[^"]+\.js' | sort -u); do curl -s "$SITE$js"; done > bundle.js
           URL=$(grep -oE 'https://[a-z0-9]{20}\.supabase\.co' bundle.js | head -1)
           KEY=$(grep -oE 'sb_publishable_[A-Za-z0-9_-]+' bundle.js | head -1)
