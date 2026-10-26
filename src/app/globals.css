@@ -1,25 +1,25 @@
-/* bustas.lt: šilta terakotos ir oranžinė paletė. Šviesi ir tamsi tema pagal sistemos nustatymą. */
+/* bustas.lt: medaus ir riešuto paletė. Šviesi ir tamsi tema pagal sistemos nustatymą. */
 :root {
-  /* Šilta paletė: čerpių stogų terakota (prekės ženklas), oranžinis veiksmo akcentas, smėlio fonas. */
-  --bg: #FBF5EE;
+  /* „Medus ir riešutas“: riešuto ruda (prekės ženklas), medaus geltonas veiksmo akcentas, kreminis fonas. */
+  --bg: #FAF6EF;
   --surface: #FFFFFF;
-  --surface-2: #F5EADF;
+  --surface-2: #F2EADC;
   --field: #FFFFFF;
-  --ink: #2B1D15;
-  --ink-2: #5E4A3E;
-  --ink-3: #8A7466;
-  --line: #EADBCD;
-  --brand: #A63D22;
-  --brand-2: #8E3219;
-  --brand-ink: #FFF4EA;
-  --brand-ink-2: #F6D2BE;
-  --accent: #F28A1E;
-  --accent-hover: #F59B3D;
-  --accent-ink: #2B1404;
-  --accent-glow: rgba(242, 138, 30, .45);
-  --link: #B4441F;
+  --ink: #2A2018;
+  --ink-2: #5C4E40;
+  --ink-3: #7E6E5E;
+  --line: #E6DAC6;
+  --brand: #4E3324;
+  --brand-2: #3C261A;
+  --brand-ink: #FFF6E8;
+  --brand-ink-2: #E9CFA8;
+  --accent: #E8A33D;
+  --accent-hover: #F0B358;
+  --accent-ink: #2A1A05;
+  --accent-glow: rgba(232, 163, 61, .45);
+  --link: #8A5A2B;
   --danger: #C23B3B;
-  --cut: #D6336C;
+  --cut: #C2410C;
   --cut-ink: #FFFFFF;
   --ok-bg: #E2F2E8; --ok-fg: #17663F;
   --muted-bg: #ECEEF0; --muted-fg: #4B5560;
@@ -38,11 +38,11 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17110D; --surface: #211812; --surface-2: #2B2019; --field: #1B140F;
-    --ink: #F5E9DF; --ink-2: #CDB8A8; --ink-3: #A08B7C; --line: #3A2C22;
-    --brand: #7E2D18; --brand-2: #62220F; --brand-ink: #FFEDE0; --brand-ink-2: #F0C3A8;
-    --accent: #F59A35; --accent-hover: #F8AC57; --accent-ink: #241002; --accent-glow: rgba(245, 154, 53, .32);
-    --link: #F2A071; --danger: #FF7A7A; --cut: #F06292; --cut-ink: #2A0712;
+    --bg: #15100C; --surface: #1F1812; --surface-2: #2A2119; --field: #19130E;
+    --ink: #F4EBDF; --ink-2: #CDBDA9; --ink-3: #A3927F; --line: #3A2E23;
+    --brand: #3A2619; --brand-2: #2B1C12; --brand-ink: #FFF3E2; --brand-ink-2: #E6C99C;
+    --accent: #EDB04E; --accent-hover: #F2BF6B; --accent-ink: #241603; --accent-glow: rgba(237, 176, 78, .3);
+    --link: #E6B275; --danger: #FF7A7A; --cut: #F08A4B; --cut-ink: #1F0D02;
     --ok-bg: #173527; --ok-fg: #8FDCB0;
     --muted-bg: #242C29; --muted-fg: #B3BEB8;
     --warn-bg: #3A2416; --warn-fg: #FFB98A;
