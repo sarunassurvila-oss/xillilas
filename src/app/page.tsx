@@ -6,8 +6,8 @@ import { SetupNotice } from '@/components/SetupNotice'
 import { SortSelect } from '@/components/SortSelect'
 import { isConfigured } from '@/lib/env'
 import { MARKET_PRICES } from '@/lib/market-prices'
-import { PAGE_SIZE, hrefFor, parseFilters, roomsApply, searchWords, type Filters, type SearchParams } from '@/lib/filters'
-import { TYPES, fmt, nomWord, type Listing } from '@/lib/listings'
+import { ADV_DEFAULTS, PAGE_SIZE, advApplies, hrefFor, parseFilters, roomsApply, searchWords, type Filters, type SearchParams } from '@/lib/filters'
+import { ENERGY, TYPES, fmt, nomWord, type Listing } from '@/lib/listings'
 import { skyline } from '@/lib/picture'
 import { createClient } from '@/lib/supabase/server'
 
@@ -28,7 +28,8 @@ type Supabase = Awaited<ReturnType<typeof createClient>>
 function queryListings(supabase: Supabase, f: Filters) {
   let q = supabase
     .from('listings')
-    .select(CARD_COLUMNS, { count: 'exact' })
+    // Su „!inner“ lieka tik skelbimai, turintys bent vieną nuotrauką.
+    .select(f.photos ? CARD_COLUMNS.replace('listing_photos(', 'listing_photos!inner(') : CARD_COLUMNS, { count: 'exact' })
     .eq('status', 'active')
     .gt('expires_at', new Date().toISOString())
     .eq('deal', f.deal)
@@ -47,6 +48,31 @@ function queryListings(supabase: Supabase, f: Filters) {
     q = q.or(parts.join(','))
   }
   for (const w of searchWords(f.q)) q = q.ilike('search_text', `%${w}%`)
+  // Išsami paieška
+  const t = f.type
+  if (advApplies('floor', t)) {
+    if (f.fmin != null) q = q.gte('floor', f.fmin)
+    if (f.fmax != null) q = q.lte('floor', f.fmax)
+    if (f.notFirst) q = q.gt('floor', 1)
+    if (f.notLast) q = q.eq('floor_is_last', false)
+  }
+  if (advApplies('year', t)) {
+    if (f.ymin != null) q = q.gte('year', f.ymin)
+    if (f.ymax != null) q = q.lte('year', f.ymax)
+  }
+  if (advApplies('plot', t)) {
+    if (f.plmin != null) q = q.gte('plot', f.plmin)
+    if (f.plmax != null) q = q.lte('plot', f.plmax)
+  }
+  if (f.umin != null) q = q.gte('price_per_unit', f.umin)
+  if (f.umax != null) q = q.lte('price_per_unit', f.umax)
+  if (advApplies('building', t) && f.building.length) q = q.in('building', f.building)
+  if (advApplies('heating', t) && f.heating.length) q = q.in('heating', f.heating)
+  if (advApplies('finish', t) && f.finish.length) q = q.in('finish', f.finish)
+  if (advApplies('energy', t) && f.energy) q = q.in('energy', ENERGY.slice(0, ENERGY.indexOf(f.energy) + 1))
+  if (advApplies('purpose', t) && f.purpose) q = q.eq('purpose', f.purpose)
+  if (f.features.length) q = q.contains('features', f.features)
+  if (f.days != null) q = q.gte('published_at', new Date(Date.now() - f.days * 864e5).toISOString())
   if (f.sort === 'cheap') q = q.order('price', { ascending: true })
   else if (f.sort === 'dear') q = q.order('price', { ascending: false })
   else if (f.sort === 'big') q = q.order('area_m2', { ascending: false })
@@ -67,6 +93,26 @@ function chipsFor(f: Filters) {
   if (f.pmin != null || f.pmax != null) c.push({ label: range('Kaina', f.pmin, f.pmax, unitP), href: hrefFor({ ...f, pmin: null, pmax: null, page: 1 }) })
   if (f.amin != null || f.amax != null) c.push({ label: range('Plotas', f.amin, f.amax, unitA), href: hrefFor({ ...f, amin: null, amax: null, page: 1 }) })
   if (f.rooms.length && roomsApply(f.type)) c.push({ label: `${f.rooms.map((r) => (r === 5 ? '5+' : r)).join(', ')} kamb.`, href: hrefFor({ ...f, rooms: [], page: 1 }) })
+  const t = f.type
+  const add = (label: string, patch: Partial<Filters>) => c.push({ label, href: hrefFor({ ...f, ...patch, page: 1 }) })
+  const between = (lbl: string, a: number | null, b: number | null, u = '') =>
+    a != null && b != null ? `${lbl} ${a}–${b}${u}` : a != null ? `${lbl} nuo ${a}${u}` : `${lbl} iki ${b}${u}`
+  if (advApplies('floor', t)) {
+    if (f.fmin != null || f.fmax != null) add(between('Aukštas', f.fmin, f.fmax), { fmin: null, fmax: null })
+    if (f.notFirst) add('Ne pirmas aukštas', { notFirst: false })
+    if (f.notLast) add('Ne paskutinis aukštas', { notLast: false })
+  }
+  if (advApplies('year', t) && (f.ymin != null || f.ymax != null)) add(between('Statyta', f.ymin, f.ymax, ' m.'), { ymin: null, ymax: null })
+  if (advApplies('plot', t) && (f.plmin != null || f.plmax != null)) add(between('Sklypas', f.plmin, f.plmax, ' a'), { plmin: null, plmax: null })
+  if (f.umin != null || f.umax != null) add(between(t === 'sklypas' ? 'Už arą' : 'Už m²', f.umin, f.umax, ' €'), { umin: null, umax: null })
+  if (advApplies('building', t) && f.building.length) add(f.building.join(', '), { building: [] })
+  if (advApplies('heating', t) && f.heating.length) add(`Šildymas: ${f.heating.join(', ')}`, { heating: [] })
+  if (advApplies('finish', t) && f.finish.length) add(f.finish.join(', '), { finish: [] })
+  if (advApplies('energy', t) && f.energy) add(`Energinė klasė ${f.energy} ar geresnė`, { energy: '' })
+  if (advApplies('purpose', t) && f.purpose) add(`Paskirtis: ${f.purpose}`, { purpose: '' })
+  if (f.features.length) add(f.features.join(', '), { features: [] })
+  if (f.days != null) add(f.days === 1 ? 'Per 24 val.' : `Per ${f.days} d.`, { days: null })
+  if (f.photos) add('Su nuotraukomis', { photos: false })
   return c
 }
 
@@ -133,7 +179,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
                 <Link href={c.href} scroll={false} aria-label={`Pašalinti filtrą: ${c.label}`}><Icon name="close" /></Link>
               </span>
             ))}
-            {chips.length > 1 && <Link className="link-btn" href={hrefFor({ deal: f.deal, type: f.type, sort: f.sort })} scroll={false}>Išvalyti viską</Link>}
+            {chips.length > 1 && <Link className="link-btn" href={hrefFor({ deal: f.deal, type: f.type, sort: f.sort, ...ADV_DEFAULTS })} scroll={false}>Išvalyti viską</Link>}
           </div>
         )}
 
