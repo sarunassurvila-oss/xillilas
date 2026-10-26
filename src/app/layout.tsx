@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Bricolage_Grotesque, Figtree } from 'next/font/google'
 import { Footer } from '@/components/Footer'
@@ -9,8 +10,18 @@ const display = Bricolage_Grotesque({ subsets: ['latin', 'latin-ext'], variable:
 const body = Figtree({ subsets: ['latin', 'latin-ext'], variable: '--font-body-face', display: 'swap' })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
   title: { default: `${SITE.name} – butai, namai ir sklypai visoje Lietuvoje`, template: `%s | ${SITE.name}` },
-  description: 'Nekilnojamojo turto skelbimai: butai, namai, sklypai, patalpos ir garažai pardavimui bei nuomai visoje Lietuvoje.',
+  description: SITE.description,
+  openGraph: {
+    type: 'website',
+    locale: 'lt_LT',
+    siteName: SITE.name,
+    title: `${SITE.name} – butai, namai ir sklypai visoje Lietuvoje`,
+    description: SITE.description,
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: SITE.name }],
+  },
+  twitter: { card: 'summary_large_image' },
 }
 
 export const viewport: Viewport = {
@@ -30,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Header />
         <main>{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   )

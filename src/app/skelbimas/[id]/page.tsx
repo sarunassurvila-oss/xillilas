@@ -40,9 +40,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = Number((await params).id)
   const l = Number.isInteger(id) ? await getListing(id) : null
   if (!l) return { title: 'Skelbimas nerastas' }
+  const cover = [...(l.listing_photos ?? [])].sort((a, b) => a.position - b.position)[0]
+  const title = `${fullTitle(l)} – ${l.city}, ${priceLabel(l)}`
+  const description = (l.description || addrOf(l)).slice(0, 160)
   return {
-    title: `${fullTitle(l)} – ${l.city}, ${priceLabel(l)}`,
-    description: (l.description || addrOf(l)).slice(0, 160),
+    title,
+    description,
+    alternates: { canonical: `/skelbimas/${l.id}` },
+    // Pasidalinus skelbimu Facebook'e ar Messenger'yje rodoma pirmoji nuotrauka.
+    openGraph: { type: 'article', title, description, ...(cover ? { images: [{ url: photoUrl(cover.path) }] } : {}) },
   }
 }
 
