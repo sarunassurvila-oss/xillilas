@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { saveListing } from '@/app/mano/actions'
 import { Icon } from '@/components/icons'
+import { StreetInput } from '@/components/StreetInput'
 import { PHOTO_BUCKET } from '@/lib/env'
 import {
   BUILDINGS, ENERGY, FEATURES, FINISHES, HEATING, PURPOSES, TYPES, TYPE_KEYS, fieldApplies, photoUrl,
@@ -227,7 +228,8 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
             {err('district')}
           </label>
           <label className="field"><span>Gatvė</span>
-            <input name="street" autoComplete="off" placeholder="pvz. Kalvarijų g." value={v.street} onChange={(e) => set('street', e.target.value)} {...inv('street')} />
+            <StreetInput city={v.city} district={otherDistrict ? '' : v.district} value={v.street} onChange={(s) => set('street', s)}
+              inputProps={{ name: 'street', placeholder: v.city ? 'Pradėkite rašyti gatvę' : 'pvz. Kalvarijų g.', ...inv('street') }} />
             {err('street') ?? <span className="hint">Namo numerį rašykite tik jei norite, kad jis būtų matomas.</span>}
           </label>
         </div>

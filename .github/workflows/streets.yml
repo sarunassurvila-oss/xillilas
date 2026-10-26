@@ -1,0 +1,47 @@
+name: Atnaujinti gatvių sąrašą
+# Kartą per mėnesį iš OpenStreetMap (Geofabrik) atnaujina public/streets/*.json.
+on:
+  schedule:
+    - cron: '17 3 1 * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  streets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Atsisiųsti Lietuvos OSM duomenis
+        run: curl -sSL -o lt.osm.pbf https://download.geofabrik.de/europe/lithuania-latest.osm.pbf
+      - name: Ištraukti gatves pagal gyvenvietes
+        run: |
+          pip install -q osmium
+          python3 - <<'PY'
+          import collections, osmium
+          pairs = collections.Counter()
+          class H(osmium.SimpleHandler):
+              def t(self, tags):
+                  st = tags.get('addr:street')
+                  if st:
+                      pairs[(tags.get('addr:city', ''), tags.get('addr:municipality', ''), st)] += 1
+              def node(self, n): self.t(n.tags)
+              def way(self, w): self.t(w.tags)
+              def relation(self, r): self.t(r.tags)
+          H().apply_file('lt.osm.pbf')
+          with open('streets.tsv', 'w') as f:
+              for (c, m, s), n in sorted(pairs.items()):
+                  f.write(f"{c}\t{m}\t{s}\t{n}\n")
+          PY
+      - name: Sugeneruoti public/streets
+        run: node --experimental-strip-types scripts/build-streets.mts streets.tsv
+      - name: Įkelti pakeitimus
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/streets
+          git diff --cached --quiet && echo "Pakeitimų nėra" && exit 0
+          git commit -m "Atnaujintas gatvių sąrašas (OpenStreetMap)"
+          git push

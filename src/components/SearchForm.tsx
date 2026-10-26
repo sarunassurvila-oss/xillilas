@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef, useState, useTransition } from 'react'
+import { StreetInput } from '@/components/StreetInput'
 import { accWord } from '@/lib/listings'
 import { roomsApply, toQuery, type Filters } from '@/lib/filters'
 import { ALL_CITIES, CITY_GROUPS, districtsOf } from '@/lib/locations'
@@ -96,8 +97,9 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
           </select>
         </label>
         <label className="field"><span>Paieška</span>
-          <input name="q" type="search" value={form.q} placeholder="Gatvė ar žodis, pvz. balkonas" autoComplete="off"
-            onChange={(e) => update({ q: e.target.value }, 'later')} />
+          <StreetInput city={form.city} district={form.district} value={form.q}
+            onChange={(q) => update({ q }, 'later')} onPick={(q) => update({ q })}
+            inputProps={{ name: 'q', type: 'search', placeholder: form.city ? 'Gatvė ar žodis, pvz. balkonas' : 'Žodis, pvz. balkonas (gatvėms pasirinkite miestą)' }} />
         </label>
         <fieldset className="field"><legend>{rent ? 'Kaina, €/mėn.' : 'Kaina, €'}</legend>
           <div className="pair">

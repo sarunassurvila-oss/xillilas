@@ -110,7 +110,7 @@ a { color: var(--link) }
 .acct-menu a:hover, .acct-menu button:hover { background: var(--surface-2) }
 
 /* pradžios juosta */
-.hero { background: radial-gradient(ellipse 60% 90% at 88% 0%, var(--accent-glow), transparent 70%), var(--brand); color: var(--brand-ink); position: relative; overflow: hidden }
+.hero { background: radial-gradient(ellipse 60% 90% at 88% 0%, var(--accent-glow), transparent 70%), var(--brand); color: var(--brand-ink); position: relative }
 .skyline { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; pointer-events: none; fill: var(--brand-2) }
 .skyline svg { display: block; width: 100%; height: 100% }
 .hero-in { position: relative; z-index: 1; padding-block: 36px 52px; display: grid; gap: 22px }
@@ -137,6 +137,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 select:disabled { opacity: .6 }
 [aria-invalid="true"] { border-color: var(--danger) }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
+.combo { position: relative }
+.combo-list { position: absolute; z-index: 40; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 6px; list-style: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); max-height: 300px; overflow-y: auto }
+.combo-list li { padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 15px }
+.combo-list li[aria-selected="true"] { background: var(--surface-2) }
+.combo-list mark { background: none; color: var(--link); font-weight: 800 }
 .rooms { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px }
 .rooms label { position: relative }
 .rooms input { position: absolute; opacity: 0; width: 1px; height: 1px }

@@ -85,3 +85,8 @@ export const ALL_CITIES = CITY_GROUPS.flatMap((g) => g.cities)
 export function districtsOf(city: string): string[] {
   return BIG_CITIES[city] ?? RESORTS[city] ?? DISTRICT_MUNICIPALITIES[city] ?? TOWN_DISTRICTS[city] ?? (ALL_CITIES.includes(city) ? CENTRAS : [])
 }
+
+/** Failo vardas gatvių sąrašui public/streets/<slug>.json (pvz. „Vilniaus r.“ → „vilniaus-r“). */
+export function citySlug(city: string) {
+  return city.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
