@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { ChangePassword } from '@/components/ChangePassword'
 import { DeleteAccount } from '@/components/DeleteAccount'
 import { ProfileForm } from '@/components/ProfileForm'
 import { SetupNotice } from '@/components/SetupNotice'
@@ -23,7 +24,11 @@ export default async function ProfilePage() {
       <div className="page-head">
         <div>
           <h1>Profilis ir kontaktai</h1>
-          <p>Prisijungta per {PROVIDERS[user.provider] ?? user.provider} kaip <b>{user.email || 'paslėptas el. paštas'}</b>.</p>
+          {user.username ? (
+            <p>Prisijungta slapyvardžiu <b>{user.username}</b>.</p>
+          ) : (
+            <p>Prisijungta per {PROVIDERS[user.provider] ?? user.provider} kaip <b>{user.email || 'paslėptas el. paštas'}</b>.</p>
+          )}
         </div>
       </div>
       <div className="form">
@@ -32,6 +37,7 @@ export default async function ProfilePage() {
           phone={profile?.phone ?? ''}
           sellerKind={profile?.seller_kind === 'agency' ? 'agency' : 'private'}
         />
+        {user.username && <ChangePassword />}
         <DeleteAccount uid={user.id} />
       </div>
     </div>

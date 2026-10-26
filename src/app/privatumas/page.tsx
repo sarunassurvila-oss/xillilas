@@ -11,7 +11,8 @@ export default function PrivacyPage() {
         <p>Duomenų valdytojas: {SITE.company}, įm. k. {SITE.companyCode}, {SITE.address}. Klausimus siųskite adresu {SITE.email}.</p>
         <h2>Kokius duomenis gauname</h2>
         <ul>
-          <li><b>Prisijungiant per Google:</b> vardą, el. pašto adresą ir profilio nuotrauką. Slaptažodžių nematome ir nesaugome.</li>
+          <li><b>Prisijungiant per Google:</b> vardą, el. pašto adresą ir profilio nuotrauką. Google slaptažodžio nematome.</li>
+          <li><b>Kuriant paskyrą su slapyvardžiu:</b> slapyvardį ir slaptažodį. Slaptažodis saugomas tik užšifruotas (kaip maiša), todėl jo nematome net mes.</li>
           <li><b>Profilyje:</b> vardą ar įmonės pavadinimą, telefono numerį ir skelbėjo tipą.</li>
           <li><b>Skelbimuose:</b> objekto aprašymą, adresą, kainą, nuotraukas ir kontaktus, kuriuos patys įrašote. Šie duomenys yra vieši.</li>
           <li><b>Techniniai duomenys:</b> sesijos slapukai, būtini prisijungimui išlaikyti.</li>
@@ -19,7 +20,7 @@ export default function PrivacyPage() {
         <h2>Kam naudojame</h2>
         <p>Paskyrai sukurti ir apsaugoti, skelbimams rodyti ir valdyti, svetainės veikimui užtikrinti. Duomenų neparduodame ir nenaudojame reklamai be jūsų sutikimo.</p>
         <h2>Kur saugoma</h2>
-        <p>Duomenys saugomi Supabase infrastruktūroje Europos Sąjungoje. Prisijungimą teikia Google pagal savo privatumo taisykles.</p>
+        <p>Duomenys saugomi Supabase infrastruktūroje Europos Sąjungoje. Prisijungimą per Google teikia Google pagal savo privatumo taisykles.</p>
         <h2>Kiek laiko saugome</h2>
         <p>Kol turite paskyrą. Ištrynus paskyrą, kartu ištrinami profilis, visi skelbimai ir nuotraukos.</p>
         <h2>Jūsų teisės</h2>

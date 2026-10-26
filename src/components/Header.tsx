@@ -27,7 +27,7 @@ export async function Header() {
           {user ? (
             <>
               <Link className="btn btn-ghost hide-sm" href="/mano">Mano skelbimai</Link>
-              <AccountMenu name={user.name} email={user.email} avatar={user.avatar} />
+              <AccountMenu name={user.name} email={user.email || `@${user.username}`} avatar={user.avatar} />
             </>
           ) : (
             <Link className="btn btn-ghost" href="/prisijungti">Prisijungti</Link>

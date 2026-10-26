@@ -148,7 +148,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           <div>
             <p className="eyebrow">Nekilnojamasis turtas visoje Lietuvoje</p>
             <h1 id="heroTitle">Butai, namai ir sklypai visoje Lietuvoje</h1>
-            <p className="lead">Ieškokite pagal miestą, mikrorajoną, kainą ir plotą. Parduodate ar nuomojate? Prisijunkite su Google paskyra ir įdėkite skelbimą per kelias minutes.</p>
+            <p className="lead">Ieškokite pagal miestą, mikrorajoną, kainą ir plotą. Parduodate ar nuomojate? Prisijunkite ir įdėkite skelbimą per kelias minutes.</p>
           </div>
           <SearchForm key={`${f.deal}|${f.type}|${f.city}`} filters={f} locations={locations} total={total} />
         </div>
