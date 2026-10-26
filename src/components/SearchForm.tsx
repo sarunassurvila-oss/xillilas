@@ -207,7 +207,7 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
             <label className="field"><span>Energinė klasė</span>
               <select name="en" value={form.energy} onChange={(e) => update({ energy: e.target.value })}>
                 <option value="">Nesvarbu</option>
-                {ENERGY.slice(0, 6).map((c) => <option key={c} value={c}>{c === 'A++' ? 'A++' : `${c} ar geresnė`}</option>)}
+                {ENERGY.map((c) => <option key={c}>{c}</option>)}
               </select>
             </label>
           )}

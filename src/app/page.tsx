@@ -7,7 +7,7 @@ import { SortSelect } from '@/components/SortSelect'
 import { isConfigured } from '@/lib/env'
 import { MARKET_PRICES } from '@/lib/market-prices'
 import { ADV_DEFAULTS, PAGE_SIZE, advApplies, hrefFor, parseFilters, roomsApply, searchWords, type Filters, type SearchParams } from '@/lib/filters'
-import { ENERGY, TYPES, fmt, nomWord, type Listing } from '@/lib/listings'
+import { TYPES, fmt, nomWord, type Listing } from '@/lib/listings'
 import { skyline } from '@/lib/picture'
 import { createClient } from '@/lib/supabase/server'
 
@@ -69,7 +69,7 @@ function queryListings(supabase: Supabase, f: Filters) {
   if (advApplies('building', t) && f.building.length) q = q.in('building', f.building)
   if (advApplies('heating', t) && f.heating.length) q = q.in('heating', f.heating)
   if (advApplies('finish', t) && f.finish.length) q = q.in('finish', f.finish)
-  if (advApplies('energy', t) && f.energy) q = q.in('energy', ENERGY.slice(0, ENERGY.indexOf(f.energy) + 1))
+  if (advApplies('energy', t) && f.energy) q = q.eq('energy', f.energy)
   if (advApplies('purpose', t) && f.purpose) q = q.eq('purpose', f.purpose)
   if (f.features.length) q = q.contains('features', f.features)
   if (f.days != null) q = q.gte('published_at', new Date(Date.now() - f.days * 864e5).toISOString())
@@ -108,7 +108,7 @@ function chipsFor(f: Filters) {
   if (advApplies('building', t) && f.building.length) add(f.building.join(', '), { building: [] })
   if (advApplies('heating', t) && f.heating.length) add(`Šildymas: ${f.heating.join(', ')}`, { heating: [] })
   if (advApplies('finish', t) && f.finish.length) add(f.finish.join(', '), { finish: [] })
-  if (advApplies('energy', t) && f.energy) add(`Energinė klasė ${f.energy} ar geresnė`, { energy: '' })
+  if (advApplies('energy', t) && f.energy) add(`Energinė klasė ${f.energy}`, { energy: '' })
   if (advApplies('purpose', t) && f.purpose) add(`Paskirtis: ${f.purpose}`, { purpose: '' })
   if (f.features.length) add(f.features.join(', '), { features: [] })
   if (f.days != null) add(f.days === 1 ? 'Per 24 val.' : `Per ${f.days} d.`, { days: null })
@@ -132,6 +132,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
   const allCount = [...counts.values()].reduce((a, b) => a + b, 0)
   const locations = (locRes.data ?? []) as { city: string; district: string }[]
   const maxStat = Math.max(...MARKET_PRICES.cities.map((c) => c.price))
+  const pct = (v: number) => `${v.toLocaleString('lt-LT', { minimumFractionDigits: 1 })} %`
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const dealWord = f.deal === 'sale' ? 'pardavimui' : 'nuomai'
@@ -217,10 +218,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
         <div className="stats-card">
           <div className="stats-intro">
             <h2 id="statsTitle">Butų kainos miestuose</h2>
-            <p>Vidutinė butų pasiūlos kaina už kvadratinį metrą, {MARKET_PRICES.period}. Paspauskite miestą, kad pamatytumėte jo butus.</p>
+            <p>Vidutinė butų pardavimo kaina už kvadratinį metrą didmiesčiuose, {MARKET_PRICES.period}. Paspauskite miestą, kad pamatytumėte jo butus.</p>
             <div className="big-figure">
-              <b>{fmt(MARKET_PRICES.national)} €/m²</b>
-              <span>Lietuvos vidurkis</span>
+              <b>+{pct(MARKET_PRICES.yearChange)}</b>
+              <span>tiek per metus pabrango butai didmiesčiuose</span>
             </div>
             <p className="source">Šaltinis: <a href={MARKET_PRICES.sourceUrl} target="_blank" rel="noopener noreferrer">{MARKET_PRICES.sourceLabel}</a></p>
           </div>
@@ -229,7 +230,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
               <div className="bar-row" key={c.city}>
                 <Link className="link-btn" href={hrefFor({ deal: 'sale', type: 'butas', city: c.city })}>{c.city}</Link>
                 <div className="bar-track" aria-hidden="true"><div className="bar-fill" style={{ width: `${((c.price / maxStat) * 100).toFixed(1)}%` }} /></div>
-                <span className="bar-val"><b>{fmt(c.price)} €/m²</b></span>
+                <span className="bar-val"><b>{fmt(c.price)} €/m²</b><small title="Pokytis per metus">+{pct(c.yearChange)}</small></span>
               </div>
             ))}
           </div>
