@@ -132,7 +132,7 @@ jobs:
         run: |
           set +e
           out=""
-          for n in namo namie inamus isikelk raktukas butika namija bustija namora kvadra kvadro jaukiai jaukumas gyvenu gyvenkim nami savas manovieta plyta plytos kiemelis stogelis pastoge lizdas lizdelis guzta avilys domus homy nestly bustukas namuko kraustukas einamnamo savaguzta namolis raktasinamus sviesuma langai namuciai nameliai rakteliai kvadratukai erdvu; do
+          for n in pirkia pirkele troba trobele grycia seklycia bustine buveine prieangis zidinys namuzidinys langine kaminas vietele svirnas kletis domi rasknamus namaicia tavonamai sodyba gimtine vartai pamatas kluonas ziburys jauki namoku pirkiu pirktis namams busto24 raktas24 namuose kraitis prieglobstis pirk butuk; do
             r=$(printf 'get 1.0 %s.lt\n' "$n" | timeout 8 nc das.domreg.lt 4343 2>/dev/null | grep -i '^Status:' | head -1 | sed 's/Status: *//I')
             [ -z "$r" ] && r=$(timeout 8 whois -h whois.domreg.lt "$n.lt" 2>/dev/null | grep -i '^Status:' | head -1 | sed 's/Status: *//I')
             out="$out$n.lt=${r:-?}; "
