@@ -110,6 +110,25 @@ jobs:
               fi
             done
             log "Slapyvardžių apribojimas (0003): $(q "select count(*) as n from pg_trigger where tgname = 'guard_password_accounts'" | jq -r 'if type == "array" and .[0].n == 0 then "pašalintas" else "dar yra" end')"
+            # Koordinatės skelbimams, kuriems jų dar nėra (OpenStreetMap paieška, ne dažniau kaip 1 užklausa per sekundę).
+            geo() { curl -s -A "bustas.lt (+$SITE)" --max-time 10 "https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=lt&limit=1&q=$(jq -rn --arg q "$1" '$q|@uri')" | jq -r 'if type == "array" and length > 0 then "\(.[0].lat|tonumber) \(.[0].lon|tonumber)" else empty end' 2>/dev/null; sleep 1.2; }
+            todo=$(q "select id, city, district, street from public.listings where lat is null order by id limit 50")
+            n=0; found=0
+            while read -r row; do
+              [ -n "$row" ] || continue
+              n=$((n+1))
+              id=$(echo "$row" | jq -r '.id|tonumber'); city=$(echo "$row" | jq -r '.city'); dist=$(echo "$row" | jq -r '.district'); street=$(echo "$row" | jq -r '.street')
+              case "$city" in *" r.") place="$dist"; area="${city% r.} rajono savivaldybė";; *) place="$city"; area="$city";; esac
+              ll=""
+              for qq in "$street, $place" "$dist, $area" "$area"; do ll=$(geo "$qq"); [ -n "$ll" ] && break; done
+              if [ -n "$ll" ]; then
+                read -r la lo <<< "$ll"
+                if awk -v a="$la" -v o="$lo" 'BEGIN { exit !(a >= 53.8 && a <= 56.5 && o >= 20.9 && o <= 26.9) }'; then
+                  q "update public.listings set lat = $la, lng = $lo where id = $id and lat is null" >/dev/null && found=$((found+1))
+                fi
+              fi
+            done < <(echo "$todo" | jq -c 'if type == "array" then .[] else empty end')
+            log "Koordinatės: rasta $found iš $n skelbimų be vietos"
             log "Stulpelis floor_is_last: $(q "select count(*) as n from information_schema.columns where table_schema = 'public' and table_name = 'listings' and column_name = 'floor_is_last'" | jq -r 'if type == "array" and .[0].n == 1 then "yra" else "NĖRA" end')"
 
             keys=$(curl -s "${H[@]}" "$API/projects/$REF/api-keys")
