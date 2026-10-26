@@ -22,6 +22,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           SMTP_SENDER: ${{ secrets.SMTP_SENDER }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           SITE: https://xillilas.vercel.app
           VERCEL_PROJECT: xillilas
           VERCEL_SCOPE: sarunassurvila-1289
@@ -129,6 +130,27 @@ jobs:
               fi
             done < <(echo "$todo" | jq -c 'if type == "array" then .[] else empty end')
             log "Koordinatės: rasta $found iš $n skelbimų be vietos"
+            # Prenumeratų laiškai: nustatymai Supabase Vault (siunčia duomenų bazė per Brevo API).
+            vset() {
+              local v=${2//\'/\'\'}
+              printf "do \$\$ begin if exists (select 1 from vault.secrets where name = '%s') then perform vault.update_secret((select id from vault.secrets where name = '%s'), '%s'); else perform vault.create_secret('%s', '%s'); end if; end \$\$;" "$1" "$1" "$v" "$v" "$1" \
+                | jq -Rs '{query: .}' | curl -s "${H[@]}" -X POST "$API/projects/$REF/database/query" --data-binary @- | jq -r 'if type == "array" then "ok" else (.message // .) end' | cut -c1-150
+            }
+            log "Vault site_url: $(vset site_url "$SITE")"
+            log "Vault photos_url: $(vset photos_url "https://$REF.supabase.co/storage/v1/object/public/listing-photos/")"
+            SND=$(printf '%s' "${SMTP_SENDER:-}" | tr -d '[:space:]')
+            [ -n "$SND" ] && log "Vault alerts_sender: $(vset alerts_sender "$SND")"
+            BAK=$(printf '%s' "${BREVO_API_KEY:-}" | tr -d '[:space:]')
+            if [ -n "$BAK" ]; then
+              log "Vault brevo_api_key: $(vset brevo_api_key "$BAK")"
+              # Bandomasis laiškas iš duomenų bazės (tikrina Brevo raktą ir Supabase IP) siuntėjui pačiam.
+              rid=$(q "select net.http_post(url := 'https://api.brevo.com/v3/smtp/email', headers := jsonb_build_object('api-key', public.alert_secret('brevo_api_key'), 'content-type', 'application/json', 'accept', 'application/json'), body := jsonb_build_object('sender', jsonb_build_object('name', 'bustas.lt', 'email', public.alert_secret('alerts_sender')), 'to', jsonb_build_array(jsonb_build_object('email', public.alert_secret('alerts_sender'))), 'subject', 'bustas.lt: prenumeratų laiškai veikia', 'htmlContent', '<p>Laiškai apie naujus skelbimus siunčiami. Šį laišką išsiuntė svetainės nustatymų patikra.</p>'), timeout_milliseconds := 10000) as id" | jq -r '.[0].id // empty')
+              sleep 8
+              log "Bandomasis prenumeratų laiškas per Brevo API: $(q "select coalesce(status_code::text, 'nėra atsakymo') || ' ' || left(coalesce(content, error_msg, ''), 160) as r from net._http_response where id = ${rid:-0}" | jq -r '.[0].r // "nėra atsakymo"')"
+            else
+              log "Prenumeratų laiškai: GitHub'e dar nėra BREVO_API_KEY (laiškai kaupiami eilėje iki paros)"
+            fi
+            log "Prenumeratų užduotis kas minutę: $(q "select count(*) as n from cron.job where jobname = 'listing-alerts' and active" | jq -r 'if type == "array" and .[0].n == 1 then "veikia" else "NĖRA" end'); prenumeratų: $(q "select count(*) as n from public.saved_searches" | jq -r '.[0].n // "?"'); laiškų (išsiųsta/laukia/klaidos): $(q "select count(*) filter (where status = 'sent') || '/' || count(*) filter (where status in ('pending','sending')) || '/' || count(*) filter (where status = 'failed') as n from public.alert_outbox" | jq -r '.[0].n // "?"')"
             log "Stulpelis floor_is_last: $(q "select count(*) as n from information_schema.columns where table_schema = 'public' and table_name = 'listings' and column_name = 'floor_is_last'" | jq -r 'if type == "array" and .[0].n == 1 then "yra" else "NĖRA" end')"
 
             keys=$(curl -s "${H[@]}" "$API/projects/$REF/api-keys")
