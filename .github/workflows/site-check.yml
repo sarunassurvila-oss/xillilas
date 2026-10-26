@@ -83,7 +83,7 @@ jobs:
 
       - name: Ober-Haus butų kainų indeksas
         run: |
-          set -u
+          set +e
           {
           A='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
           txt() { python3 -c 'import sys,re,html; s=sys.stdin.read(); s=re.sub(r"(?s)<(script|style).*?</\1>","",s); print(re.sub(r"\s+"," ",html.unescape(re.sub(r"<[^>]+>"," ",s))))'; }
@@ -93,8 +93,8 @@ jobs:
           grep -oE '.{0,700}(Eur/m|EUR/m|€/m|kv\. m).{0,500}' p.txt | head -3
           curl -sL -A "$A" -o r.pdf https://www.ober-haus.lt/wp-content/uploads/OHBI-apzvalga-2026-rugsejis.pdf
           echo "PDF: $(file -b r.pdf | cut -c1-40)"
-          (command -v pdftotext >/dev/null || sudo apt-get install -y -qq poppler-utils >/dev/null 2>&1)
-          pdftotext -layout r.pdf r.txt 2>/dev/null
+          pip install -q pypdf >/dev/null 2>&1
+          python3 -c 'import pypdf; r=pypdf.PdfReader("r.pdf"); print("\n".join(p.extract_text() or "" for p in r.pages))' > r.txt 2>&1
           grep -nE 'Vilni|Kaun|Klaip|Šiaul|Panev|Eur|EUR|12 mėn|metin|rugsėj|Paskelbta|2026' r.txt | head -45
           } > oh.txt 2>&1
           cat oh.txt
