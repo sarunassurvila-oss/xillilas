@@ -28,7 +28,7 @@ jobs:
           grep -q 'Skelbimų dar nėra' home.html && echo "BUSENA1: DB_VEIKIA_SKELBIMU_NERA"
           echo "Kortelių: $(grep -o 'class="card"' home.html | wc -l)"
           echo "Kainų lentelė: $(grep -q 'Butų kainos miestuose' home.html && echo yra || echo NĖRA), konkurentų pavadinimai: $(grep -oiE 'aruodas|ober-haus|domoplius|skelbiu\.lt' home.html | sort -u | tr '\n' ' ' | grep . || echo nėra); miestai: $(grep -oE '(Vilnius|Kaunas|Klaipėda|Šiauliai|Panevėžys|Alytus)</a>' home.html | sed 's#</a>##' | tr '\n' ' ')"
-          echo "Kainos: $(for n in 3197 2339 2103 1457 1432; do a=${n:0:1}; b=${n:1}; LC_ALL=C.UTF-8 grep -qP "${a}[\x{00A0}\x{202F} ]${b}" home.html && printf '%s✓ ' $n || printf '%s✗ ' $n; done)"
+          echo "Kainos: $(for n in kurgyventi kurgyvenu ieskaubuto ieskaunamo noriubuto bustopaieska ntpaieska manobustas manonamai bustoraktas naujiraktai namoraktai raktine kvartalas kaimynai kaimynas nuosavas nuosavybe nuosavasbustas ntzemelapis ntkampas visasnt ntskelbimai bustoturgus bustomuge nttaskas kvadratukas kvadratynas slenkstis naujasbustas savasbustas bustopasaulis namuvartai raktasnamo pirmasbustas; do a=${n:0:1}; b=${n:1}; LC_ALL=C.UTF-8 grep -qP "${a}[\x{00A0}\x{202F} ]${b}" home.html && printf '%s✓ ' $n || printf '%s✗ ' $n; done)"
 
           echo "== Išsami paieška =="
           for qs in 'type=butas&nl=1' 'type=butas&en=A%2B%2B' 'type=butas&nl=1&nf=1&fmin=2&ymin=1980&en=B&bld=M%C5%ABrinis&heat=Centrinis&fin=%C4%AErengtas&feat=Balkonas&umin=100&days=30&photos=1' 'type=sklypas&purpose=Gyvenamasis&umax=5000' 'type=namas&plmin=5&plmax=50'; do
