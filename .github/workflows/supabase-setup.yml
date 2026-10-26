@@ -133,7 +133,7 @@ jobs:
                 log "KLAIDA: bandomojo laiško išsiųsti nepavyko: $(echo "$out" | sed "s/$SMTP_PASS/***/g" | tail -2 | tr '\n' ' ' | cut -c1-250)"
               fi
             else
-              log "Laiškų paslauga: GitHub'e nėra SMTP_USER, SMTP_PASS ir SMTP_SENDER"
+              log "Laiškų paslauga: trūksta raktų. Matomi: SMTP_USER $([ -n "$SMTP_USER" ] && echo yra || echo NĖRA), SMTP_PASS $([ -n "$SMTP_PASS" ] && echo yra || echo NĖRA), SMTP_SENDER $([ -n "$SMTP_SENDER" ] && echo yra || echo NĖRA)"
             fi
             # El. paštas + slaptažodis su patvirtinimo laišku. Laiškų nuorodos veda į /auth/confirm (veikia ir kitame įrenginyje).
             CONFIRM_HTML='<h2>Sveiki!</h2><p>Paspauskite nuorodą, kad patvirtintumėte el. pašto adresą ir prisijungtumėte prie bustas.lt:</p><p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/mano">Patvirtinti el. paštą</a></p><p>Jei paskyros nekūrėte, šį laišką galite ignoruoti.</p>'
