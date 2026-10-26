@@ -5,6 +5,7 @@ import { SearchForm } from '@/components/SearchForm'
 import { SetupNotice } from '@/components/SetupNotice'
 import { SortSelect } from '@/components/SortSelect'
 import { isConfigured } from '@/lib/env'
+import { MARKET_PRICES } from '@/lib/market-prices'
 import { PAGE_SIZE, hrefFor, parseFilters, roomsApply, searchWords, type Filters, type SearchParams } from '@/lib/filters'
 import { TYPES, fmt, nomWord, type Listing } from '@/lib/listings'
 import { skyline } from '@/lib/picture'
@@ -73,11 +74,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
   if (!isConfigured) return <SetupNotice />
   const f = parseFilters(await searchParams)
   const supabase = await createClient()
-  const [listRes, countsRes, locRes, statsRes] = await Promise.all([
+  const [listRes, countsRes, locRes] = await Promise.all([
     queryListings(supabase, f),
     supabase.rpc('listing_type_counts', { p_deal: f.deal }),
     supabase.rpc('listing_locations'),
-    supabase.rpc('city_price_stats'),
   ])
 
   const listings = (listRes.data ?? []) as unknown as Listing[]
@@ -85,8 +85,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
   const counts = new Map<string, number>(((countsRes.data ?? []) as { type: string; n: number }[]).map((r) => [r.type, Number(r.n)]))
   const allCount = [...counts.values()].reduce((a, b) => a + b, 0)
   const locations = (locRes.data ?? []) as { city: string; district: string }[]
-  const stats = ((statsRes.data ?? []) as { city: string; avg_price_m2: number; n: number }[]).map((s) => ({ ...s, avg_price_m2: Number(s.avg_price_m2), n: Number(s.n) }))
-  const maxStat = Math.max(1, ...stats.map((s) => s.avg_price_m2))
+  const maxStat = Math.max(...MARKET_PRICES.cities.map((c) => c.price))
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const dealWord = f.deal === 'sale' ? 'pardavimui' : 'nuomai'
@@ -168,25 +167,28 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
         )}
       </section>
 
-      {stats.length > 0 && (
-        <section className="wrap stats" aria-labelledby="statsTitle">
-          <div className="stats-card">
-            <div className="stats-intro">
-              <h2 id="statsTitle">Butų kainos miestuose</h2>
-              <p>Vidutinė pardavimo kaina už kvadratinį metrą pagal šiuo metu aktyvius butų skelbimus. Paspauskite miestą, kad pamatytumėte jo butus.</p>
+      <section className="wrap stats" aria-labelledby="statsTitle">
+        <div className="stats-card">
+          <div className="stats-intro">
+            <h2 id="statsTitle">Butų kainos miestuose</h2>
+            <p>Vidutinė butų pasiūlos kaina už kvadratinį metrą, {MARKET_PRICES.period}. Paspauskite miestą, kad pamatytumėte jo butus.</p>
+            <div className="big-figure">
+              <b>{fmt(MARKET_PRICES.national)} €/m²</b>
+              <span>Lietuvos vidurkis</span>
             </div>
-            <div className="bars">
-              {stats.map((s) => (
-                <div className="bar-row" key={s.city}>
-                  <Link className="link-btn" href={hrefFor({ deal: 'sale', type: 'butas', city: s.city })}>{s.city}</Link>
-                  <div className="bar-track" aria-hidden="true"><div className="bar-fill" style={{ width: `${((s.avg_price_m2 / maxStat) * 100).toFixed(1)}%` }} /></div>
-                  <span className="bar-val"><b>{fmt(s.avg_price_m2)} €/m²</b><small>{s.n} skelb.</small></span>
-                </div>
-              ))}
-            </div>
+            <p className="source">Šaltinis: <a href={MARKET_PRICES.sourceUrl} target="_blank" rel="noopener noreferrer">{MARKET_PRICES.sourceLabel}</a></p>
           </div>
-        </section>
-      )}
+          <div className="bars">
+            {MARKET_PRICES.cities.map((c) => (
+              <div className="bar-row" key={c.city}>
+                <Link className="link-btn" href={hrefFor({ deal: 'sale', type: 'butas', city: c.city })}>{c.city}</Link>
+                <div className="bar-track" aria-hidden="true"><div className="bar-fill" style={{ width: `${((c.price / maxStat) * 100).toFixed(1)}%` }} /></div>
+                <span className="bar-val"><b>{fmt(c.price)} €/m²</b></span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </>
   )
 }
