@@ -30,6 +30,14 @@ jobs:
           echo "Kainų lentelė: $(grep -q 'Butų kainos miestuose' home.html && echo yra || echo NĖRA); miestai: $(grep -oE '(Vilnius|Kaunas|Klaipėda|Panevėžys|Šiauliai|Alytus)</a>' home.html | sed 's#</a>##' | tr '\n' ' ')"
           echo "Kainos: $(for n in 3290 4314 3046 2776 1835 1804 1546; do a=${n:0:1}; b=${n:1}; LC_ALL=C.UTF-8 grep -qP "${a}[\x{00A0}\x{202F} ]${b}" home.html && printf '%s✓ ' $n || printf '%s✗ ' $n; done)"
 
+          echo "== Išsami paieška =="
+          for qs in 'type=butas&nl=1' 'type=butas&nl=1&nf=1&fmin=2&ymin=1980&en=B&bld=M%C5%ABrinis&heat=Centrinis&fin=%C4%AErengtas&feat=Balkonas&umin=100&days=30&photos=1' 'type=sklypas&purpose=Gyvenamasis&umax=5000' 'type=namas&plmin=5&plmax=50'; do
+            curl -s -o adv.html "$SITE/?$qs"
+            st=$(grep -q 'Nepavyko įkelti skelbimų' adv.html && echo KLAIDA || echo gerai)
+            echo "?$qs -> $st, skydelis: $(grep -q 'id="adv-panel"' adv.html && echo atidarytas || echo NĖRA), kortelių: $(grep -o 'class="card"' adv.html | wc -l)"
+          done
+          echo "Mygtukas „Išsami paieška“ pradžioje: $(grep -q 'Išsami paieška' home.html && echo yra || echo NĖRA)"
+
           echo "== Paleidimui =="
           echo "robots.txt: $(curl -s -o /dev/null -w '%{http_code}' "$SITE/robots.txt"), sitemap.xml: $(curl -s -o sm.xml -w '%{http_code}' "$SITE/sitemap.xml") ($(grep -o '<loc>' sm.xml | wc -l) adresai, skelbimų: $(grep -o '/skelbimas/' sm.xml | wc -l))"
           echo "og:image: $(grep -oE 'property="og:image" content="[^"]+' home.html | sed 's/.*content="//' | head -1) -> $(curl -s -o /dev/null -w '%{http_code}' "$SITE/og.png")"
@@ -48,6 +56,8 @@ jobs:
           if [ -n "$URL" ] && [ -n "$KEY" ]; then
             echo "-- Lentelė listings:"
             curl -s -o t.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/listings?select=id&limit=1" -H "apikey: $KEY"; head -c 200 t.json; echo
+            echo "-- Stulpelis floor_is_last:"
+            curl -s -o fl.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/listings?select=id,floor_is_last&limit=1" -H "apikey: $KEY"; head -c 200 fl.json; echo
             echo "-- Funkcija listing_type_counts:"
             curl -s -o f.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/rpc/listing_type_counts?p_deal=sale" -H "apikey: $KEY"; head -c 200 f.json; echo
             echo "-- Prisijungimo tiekėjai:"
