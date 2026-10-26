@@ -1,31 +1,33 @@
-/* bustas.lt: pušies žalia + gintaro akcentas. Šviesi ir tamsi tema pagal sistemos nustatymą. */
+/* bustas.lt: šilta terakotos ir oranžinė paletė. Šviesi ir tamsi tema pagal sistemos nustatymą. */
 :root {
-  --bg: #F2F4F1;
+  /* Šilta paletė: čerpių stogų terakota (prekės ženklas), oranžinis veiksmo akcentas, smėlio fonas. */
+  --bg: #FBF5EE;
   --surface: #FFFFFF;
-  --surface-2: #E8ECE7;
+  --surface-2: #F5EADF;
   --field: #FFFFFF;
-  --ink: #16201B;
-  --ink-2: #4B5751;
-  --ink-3: #717D77;
-  --line: #D6DDD7;
-  --pine: #1E4A3E;
-  --pine-2: #275A4C;
-  --pine-ink: #EEF4EF;
-  --pine-ink-2: #B9CEC3;
-  --amber: #E9A51A;
-  --amber-hover: #F3B53A;
-  --amber-ink: #201604;
-  --link: #1D6A55;
+  --ink: #2B1D15;
+  --ink-2: #5E4A3E;
+  --ink-3: #8A7466;
+  --line: #EADBCD;
+  --brand: #A63D22;
+  --brand-2: #8E3219;
+  --brand-ink: #FFF4EA;
+  --brand-ink-2: #F6D2BE;
+  --accent: #F28A1E;
+  --accent-hover: #F59B3D;
+  --accent-ink: #2B1404;
+  --accent-glow: rgba(242, 138, 30, .45);
+  --link: #B4441F;
   --danger: #C23B3B;
-  --cut: #B4401F;
+  --cut: #D6336C;
   --cut-ink: #FFFFFF;
   --ok-bg: #E2F2E8; --ok-fg: #17663F;
   --muted-bg: #ECEEF0; --muted-fg: #4B5560;
   --warn-bg: #FBE9DD; --warn-fg: #9A4412;
   --info-bg: #E3ECF6; --info-fg: #2C5A8A;
   --google-bg: #FFFFFF; --google-fg: #1F1F1F; --google-line: #747775;
-  --shadow: 0 1px 2px rgba(16, 32, 24, .06), 0 10px 28px rgba(16, 32, 24, .09);
-  --shadow-sm: 0 1px 2px rgba(16, 32, 24, .12);
+  --shadow: 0 1px 2px rgba(60, 30, 10, .06), 0 10px 28px rgba(60, 30, 10, .10);
+  --shadow-sm: 0 1px 2px rgba(60, 30, 10, .14);
   --e-app: #0B7A3B; --e-ap: #1F9A46; --e-a: #57B146; --e-b: #B7CC2F; --e-c: #F2C418; --e-d: #EF8B1D; --e-e: #E2522B; --e-f: #C8321F;
   --e-ink-l: #FFFFFF; --e-ink-d: #1D1A08;
   --font-display: var(--font-display-face), "Segoe UI", system-ui, sans-serif;
@@ -36,11 +38,11 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0E1412; --surface: #161E1B; --surface-2: #1D2723; --field: #111916;
-    --ink: #E6EDE9; --ink-2: #A9B6AF; --ink-3: #84918A; --line: #2B3732;
-    --pine: #163A30; --pine-2: #1E4A3E; --pine-ink: #E6F0EA; --pine-ink-2: #9FBBAE;
-    --amber: #EFB03A; --amber-hover: #F6C25E; --amber-ink: #201604;
-    --link: #6FC6A8; --danger: #FF7A7A; --cut: #FF8A5C; --cut-ink: #1E0A03;
+    --bg: #17110D; --surface: #211812; --surface-2: #2B2019; --field: #1B140F;
+    --ink: #F5E9DF; --ink-2: #CDB8A8; --ink-3: #A08B7C; --line: #3A2C22;
+    --brand: #7E2D18; --brand-2: #62220F; --brand-ink: #FFEDE0; --brand-ink-2: #F0C3A8;
+    --accent: #F59A35; --accent-hover: #F8AC57; --accent-ink: #241002; --accent-glow: rgba(245, 154, 53, .32);
+    --link: #F2A071; --danger: #FF7A7A; --cut: #F06292; --cut-ink: #2A0712;
     --ok-bg: #173527; --ok-fg: #8FDCB0;
     --muted-bg: #242C29; --muted-fg: #B3BEB8;
     --warn-bg: #3A2416; --warn-fg: #FFB98A;
@@ -61,7 +63,7 @@ h1, h2, h3 { text-wrap: balance }
 p { margin: 0 }
 a { color: var(--link) }
 [hidden] { display: none !important }
-:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .wrap { max-width: 1240px; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
 .narrow { max-width: 860px }
 .ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none }
@@ -70,8 +72,8 @@ a { color: var(--link) }
 /* mygtukai */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: var(--r); border: 1px solid transparent; font: 600 14px/1 var(--font-body); cursor: pointer; background: none; color: var(--ink); white-space: nowrap; text-decoration: none; transition: background-color .15s, border-color .15s }
 .btn:disabled { opacity: .6; cursor: progress }
-.btn-cta { background: var(--amber); color: var(--amber-ink) }
-.btn-cta:hover { background: var(--amber-hover) }
+.btn-cta { background: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 16px -8px var(--accent-glow) }
+.btn-cta:hover { background: var(--accent-hover) }
 .btn-ghost { border-color: var(--line); background: var(--surface) }
 .btn-ghost:hover { background: var(--surface-2) }
 .btn-danger { border-color: var(--line); background: var(--surface); color: var(--danger) }
@@ -98,7 +100,7 @@ a { color: var(--link) }
 .acct { position: relative }
 .acct summary { list-style: none; cursor: pointer; border-radius: 999px }
 .acct summary::-webkit-details-marker { display: none }
-.avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--pine); color: var(--pine-ink); font: 700 15px var(--font-display); overflow: hidden }
+.avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--brand); color: var(--brand-ink); font: 700 15px var(--font-display); overflow: hidden }
 .avatar img { width: 100%; height: 100%; object-fit: cover }
 .acct-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 240px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 8px; display: grid; gap: 2px; z-index: 30 }
 .acct-who { padding: 8px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; min-width: 0 }
@@ -108,13 +110,13 @@ a { color: var(--link) }
 .acct-menu a:hover, .acct-menu button:hover { background: var(--surface-2) }
 
 /* pradžios juosta */
-.hero { background: var(--pine); color: var(--pine-ink); position: relative; overflow: hidden }
-.skyline { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; pointer-events: none; fill: var(--pine-2) }
+.hero { background: radial-gradient(ellipse 60% 90% at 88% 0%, var(--accent-glow), transparent 70%), var(--brand); color: var(--brand-ink); position: relative; overflow: hidden }
+.skyline { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; pointer-events: none; fill: var(--brand-2) }
 .skyline svg { display: block; width: 100%; height: 100% }
 .hero-in { position: relative; z-index: 1; padding-block: 36px 52px; display: grid; gap: 22px }
-.eyebrow { font: 700 12px/1 var(--font-body); letter-spacing: .09em; text-transform: uppercase; color: var(--amber) }
+.eyebrow { font: 700 12px/1 var(--font-body); letter-spacing: .09em; text-transform: uppercase; color: var(--brand-ink-2) }
 .hero h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 4.4vw, 50px); line-height: 1.02; letter-spacing: -.03em; margin: 10px 0 12px; max-width: 18ch }
-.lead { color: var(--pine-ink-2); font-size: 16.5px; max-width: 56ch }
+.lead { color: var(--brand-ink-2); font-size: 16.5px; max-width: 56ch }
 
 /* paieška */
 .search { background: var(--surface); color: var(--ink); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 18px 20px 20px; display: grid; gap: 16px }
@@ -123,7 +125,7 @@ a { color: var(--link) }
 .seg input { position: absolute; opacity: 0; pointer-events: none }
 .seg span { display: block; height: 36px; padding: 0 18px; border-radius: 7px; font: 600 14px/36px var(--font-body); color: var(--ink-2) }
 .seg input:checked + span { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm) }
-.seg input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: 1px }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px }
 .fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: end }
 .field { display: grid; gap: 6px; align-content: start; min-width: 0; border: 0; margin: 0; padding: 0 }
 .field > span, .field > legend, .label { font: 600 12.5px/1.2 var(--font-body); color: var(--ink-2); padding: 0 }
@@ -131,7 +133,7 @@ a { color: var(--link) }
 input, select, textarea { height: 44px; width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--field); color: var(--ink); padding: 0 12px; font: 15px var(--font-body) }
 textarea { height: auto; min-height: 140px; padding: 10px 12px; resize: vertical; line-height: 1.5 }
 input::placeholder, textarea::placeholder { color: var(--ink-3) }
-input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--amber); outline-offset: 0; border-color: transparent }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent }
 select:disabled { opacity: .6 }
 [aria-invalid="true"] { border-color: var(--danger) }
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px }
@@ -140,8 +142,8 @@ select:disabled { opacity: .6 }
 .rooms input { position: absolute; opacity: 0; width: 1px; height: 1px }
 .rooms span { display: grid; place-items: center; height: 44px; border: 1px solid var(--line); border-radius: 8px; font-weight: 600; cursor: pointer; background: var(--field); font-variant-numeric: tabular-nums }
 .rooms span:hover { border-color: var(--ink-3) }
-.rooms input:checked + span { background: var(--pine); border-color: var(--pine); color: var(--pine-ink) }
-.rooms input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: 1px }
+.rooms input:checked + span { background: var(--brand); border-color: var(--brand); color: var(--brand-ink) }
+.rooms input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px }
 .f-submit { grid-column: 4 }
 .f-submit .btn { height: 44px; width: 100%; font-size: 15px }
 @media (max-width: 980px) { .fields { grid-template-columns: repeat(2, minmax(0, 1fr)) } .f-submit { grid-column: auto } }
@@ -154,7 +156,7 @@ select:disabled { opacity: .6 }
 .cat .ico { width: 26px; height: 26px; color: var(--link); margin-bottom: 4px }
 .cat b { font: 700 16px/1.1 var(--font-display); letter-spacing: -.01em }
 .cat small { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums }
-.cat[aria-current="true"] { border-color: var(--link); box-shadow: inset 0 0 0 1px var(--link) }
+.cat[aria-current="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: linear-gradient(var(--surface), var(--surface-2)) }
 @media (max-width: 900px) { .cats { grid-template-columns: repeat(3, minmax(0, 1fr)) } }
 @media (max-width: 440px) { .cats { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
 
@@ -179,8 +181,8 @@ select:disabled { opacity: .6 }
 .card-img img, .illu, .illu svg { display: block; width: 100%; height: 100%; object-fit: cover }
 .badges { position: absolute; left: 10px; top: 10px; right: 10px; display: flex; gap: 6px; flex-wrap: wrap }
 .badge { font: 700 10.5px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; padding: 6px 8px; border-radius: 6px; background: var(--surface); color: var(--ink) }
-.badge.new { background: var(--amber); color: var(--amber-ink) }
-.badge.build { background: var(--pine); color: var(--pine-ink) }
+.badge.new { background: var(--accent); color: var(--accent-ink) }
+.badge.build { background: var(--brand); color: var(--brand-ink) }
 .badge.cut { background: var(--cut); color: var(--cut-ink) }
 .photo-count { position: absolute; right: 10px; bottom: 10px; font: 600 12px/1 var(--font-body); padding: 6px 8px; border-radius: 6px; background: rgba(10, 16, 13, .62); color: #fff }
 .card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0 }
@@ -192,7 +194,7 @@ select:disabled { opacity: .6 }
 .card-open { color: inherit; text-decoration: none }
 .card-open::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: 12px }
 .card-open:focus-visible { outline: none }
-.card-open:focus-visible::after { outline: 2px solid var(--amber); outline-offset: -2px }
+.card-open:focus-visible::after { outline: 2px solid var(--accent); outline-offset: -2px }
 .addr { color: var(--ink-2); font-size: 14px }
 .specs { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums }
 .specs span:not(:last-child)::after { content: "·"; margin: 0 8px; color: var(--ink-3) }
@@ -219,7 +221,7 @@ select:disabled { opacity: .6 }
 .bars { display: grid; gap: 12px; align-content: center }
 .bar-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 128px; gap: 14px; align-items: center; font-variant-numeric: tabular-nums }
 .bar-track { height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden }
-.bar-fill { height: 100%; background: var(--link); border-radius: 999px }
+.bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--brand)); border-radius: 999px }
 .bar-val { display: flex; justify-content: flex-end; align-items: baseline; gap: 6px; white-space: nowrap }
 .bar-val small { color: var(--ink-3); font-size: 12px }
 @media (max-width: 820px) { .stats-card { grid-template-columns: minmax(0, 1fr); padding: 20px } }
@@ -262,7 +264,7 @@ select:disabled { opacity: .6 }
 .g-prev { left: 12px } .g-next { right: 12px }
 .g-thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px }
 .g-thumbs button { flex: none; width: 92px; aspect-ratio: 4 / 3; border-radius: 8px; overflow: hidden; border: 2px solid transparent; padding: 0; cursor: pointer; background: var(--surface-2) }
-.g-thumbs button[aria-current="true"] { border-color: var(--amber) }
+.g-thumbs button[aria-current="true"] { border-color: var(--accent) }
 .g-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block }
 .d-crumb { font: 600 12.5px var(--font-body); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3) }
 .d-main h1 { font: 700 32px/1.08 var(--font-display); letter-spacing: -.025em; margin: 6px 0 }
@@ -356,8 +358,8 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .checks label { position: relative }
 .checks input { position: absolute; opacity: 0; width: 1px; height: 1px }
 .checks span { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--field); cursor: pointer; font-size: 14px; font-weight: 500 }
-.checks input:checked + span { background: var(--pine); color: var(--pine-ink); border-color: var(--pine) }
-.checks input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: 1px }
+.checks input:checked + span { background: var(--brand); color: var(--brand-ink); border-color: var(--brand) }
+.checks input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px }
 .form-actions { position: sticky; bottom: 0; z-index: 5; background: var(--bg); border-top: 1px solid var(--line); padding-block: 14px calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; justify-content: flex-end; align-items: center; flex-wrap: wrap }
 .form-actions .form-error { margin-right: auto }
 @media (max-width: 760px) { .fgrid { grid-template-columns: repeat(2, minmax(0, 1fr)) } .form-section { padding: 18px 16px } }
@@ -374,7 +376,7 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .photo-add { aspect-ratio: 4 / 3; max-width: 100%; border: 2px dashed var(--line); border-radius: 10px; display: grid; place-items: center; text-align: center; gap: 4px; padding: 10px; cursor: pointer; color: var(--ink-2); background: var(--field); font-size: 13.5px }
 .photo-add:hover, .photo-add.drag { border-color: var(--link); color: var(--link) }
 .photo-add input { position: absolute; opacity: 0; width: 1px; height: 1px }
-.photo-add:focus-within { outline: 2px solid var(--amber); outline-offset: 2px }
+.photo-add:focus-within { outline: 2px solid var(--accent); outline-offset: 2px }
 
 .setup { max-width: 720px; margin: 48px auto; display: grid; gap: 14px }
 .setup code { background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-size: 13.5px }

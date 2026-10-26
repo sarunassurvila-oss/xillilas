@@ -27,9 +27,9 @@ export function Icon({ name, className = 'ico' }: { name: IconName; className?: 
 export function Logo() {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" style={{ fill: 'var(--pine)' }} />
-      <path d="M11 24V13a5 5 0 0 1 10 0v11" style={{ fill: 'none', stroke: 'var(--amber)', strokeWidth: 2.6, strokeLinecap: 'round' }} />
-      <path d="M7 24.5h18" style={{ stroke: 'var(--pine-ink)', strokeWidth: 2.6, strokeLinecap: 'round' }} />
+      <rect width="32" height="32" rx="8" style={{ fill: 'var(--brand)' }} />
+      <path d="M11 24V13a5 5 0 0 1 10 0v11" style={{ fill: 'none', stroke: 'var(--accent)', strokeWidth: 2.6, strokeLinecap: 'round' }} />
+      <path d="M7 24.5h18" style={{ stroke: 'var(--brand-ink)', strokeWidth: 2.6, strokeLinecap: 'round' }} />
     </svg>
   )
 }
