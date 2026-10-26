@@ -14,22 +14,29 @@ jobs:
           node-version: 22
       - name: Atsisiųsti savivaldybes, gyvenvietes ir gatves
         run: |
-          set -uo pipefail
+          set +e
           : > out.txt
-          npm i -g lt-open-data-sdk@1.2.2 >/dev/null 2>&1 || echo "SDK įdiegti nepavyko" >> out.txt
+          finish() {
+            body=$(sed -e 's/%/%25/g' out.txt | sed -e ':a;N;$!ba;s/\n/%0A/g' | cut -c1-30000)
+            echo "::notice title=Gatves::$body"
+          }
+          trap finish EXIT
+          echo "node $(node -v), npm $(npm -v)" >> out.txt
+          npm i -g lt-open-data-sdk@1.2.2 > npm.log 2>&1 || echo "SDK įdiegti nepavyko: $(tail -3 npm.log)" >> out.txt
+          echo "lt-data: $(command -v lt-data || echo nėra)" >> out.txt
           mkdir -p data/raw
           for m in savivaldybe/Savivaldybe gyvenamojivietove/GyvenamojiVietove gatve/Gatve; do
-            name=$(basename $m)
-            lt-data describe datasets/gov/rc/ar/$m > data/raw/$name.describe.txt 2>&1 || true
+            name=$(basename "$m")
             echo "== $m ==" >> out.txt
-            head -c 1200 data/raw/$name.describe.txt >> out.txt; echo >> out.txt
-            lt-data query datasets/gov/rc/ar/$m --stream --format csv -o data/raw/$name.csv > data/raw/$name.log 2>&1 || echo "KLAIDA $m: $(tail -3 data/raw/$name.log)" >> out.txt
-            echo "eilučių: $(wc -l < data/raw/$name.csv 2>/dev/null || echo 0)" >> out.txt
-            head -3 data/raw/$name.csv 2>/dev/null | cut -c1-400 >> out.txt
+            timeout 120 lt-data describe "datasets/gov/rc/ar/$m" > "data/raw/$name.describe.txt" 2>&1
+            echo "describe kodas $?" >> out.txt
+            head -c 1500 "data/raw/$name.describe.txt" >> out.txt; echo >> out.txt
+            timeout 1500 lt-data query "datasets/gov/rc/ar/$m" --stream --format csv -o "data/raw/$name.csv" > "data/raw/$name.log" 2>&1
+            echo "query kodas $? ; eilučių: $(wc -l < "data/raw/$name.csv" 2>/dev/null || echo 0)" >> out.txt
+            tail -3 "data/raw/$name.log" | cut -c1-300 >> out.txt
+            head -3 "data/raw/$name.csv" 2>/dev/null | cut -c1-400 >> out.txt
           done
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/raw && git commit -qm "Adresų registro duomenys: savivaldybės, gyvenvietės, gatvės" && git push -q origin HEAD:claude/streets-data && echo "Įkelta į šaką" >> out.txt || echo "Įkelti nepavyko" >> out.txt
-          cat out.txt
-          body=$(sed -e 's/%/%25/g' out.txt | sed -e ':a;N;$!ba;s/\n/%0A/g' | cut -c1-30000)
-          echo "::notice title=Gatves::$body"
+          exit 0
