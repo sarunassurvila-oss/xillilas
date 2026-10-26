@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Nustatyti Supabase (ir Vercel, jei yra raktas)
         env:
           SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
@@ -93,6 +95,17 @@ jobs:
                 log "KLAIDA: schemos įdiegti nepavyko: $(echo "$r" | jq -c '.message // .' | cut -c1-400)"; return
               fi
             fi
+            # Vėlesnės migracijos parašytos taip, kad jas galima kartoti.
+            for f in supabase/migrations/*.sql; do
+              [ "$(basename "$f")" = 0001_init.sql ] && continue
+              r=$(jq -Rs '{query: .}' "$f" | curl -s "${H[@]}" -X POST "$API/projects/$REF/database/query" --data-binary @-)
+              if echo "$r" | jq -e 'type == "array"' >/dev/null 2>&1; then
+                log "Migracija pritaikyta: $(basename "$f")"
+              else
+                log "KLAIDA: migracija $(basename "$f") nepavyko: $(echo "$r" | jq -c '.message // .' | cut -c1-400)"; return
+              fi
+            done
+            log "Stulpelis floor_is_last: $(q "select count(*) as n from information_schema.columns where table_schema = 'public' and table_name = 'listings' and column_name = 'floor_is_last'" | jq -r 'if type == "array" and .[0].n == 1 then "yra" else "NĖRA" end')"
 
             keys=$(curl -s "${H[@]}" "$API/projects/$REF/api-keys")
             PUB=$(echo "$keys" | jq -r '[.[] | select(.type == "publishable")][0].api_key // empty')
