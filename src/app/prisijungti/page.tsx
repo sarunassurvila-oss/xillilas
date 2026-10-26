@@ -4,8 +4,8 @@ import { redirect } from 'next/navigation'
 import { Logo } from '@/components/icons'
 import { LoginButtons } from '@/components/LoginButtons'
 import { SetupNotice } from '@/components/SetupNotice'
-import { UsernameAuth } from '@/components/UsernameAuth'
-import { usernameLoginEnabled } from '@/lib/auth-settings'
+import { EmailAuth } from '@/components/EmailAuth'
+import { emailLoginEnabled } from '@/lib/auth-settings'
 import { isConfigured } from '@/lib/env'
 import { safeNext } from '@/lib/safe-next'
 import { SITE } from '@/lib/site'
@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: Props) {
   if (user) redirect(next)
 
   const posting = next.startsWith('/mano/naujas')
-  const withUsername = await usernameLoginEnabled()
+  const withEmail = await emailLoginEnabled()
   return (
     <div className="wrap login">
       <div className="login-card">
@@ -31,18 +31,18 @@ export default async function LoginPage({ searchParams }: Props) {
         <div>
           <h1>{posting ? 'Prisijunkite ir įdėkite skelbimą' : `Prisijunkite prie ${SITE.name}`}</h1>
           <p style={{ marginTop: 8 }}>
-            {withUsername ? 'Per Google arba su slapyvardžiu, kurį susikursite čia. ' : 'Nereikia kurti slaptažodžio. '}
+            {withEmail ? 'Per Google arba el. paštu ir slaptažodžiu. ' : 'Nereikia kurti slaptažodžio. '}
             Prisijungę galėsite įdėti skelbimą, keisti kainą, pristabdyti ar pažymėti parduotu.
           </p>
         </div>
         {sp.klaida && (
-          <p className="banner warn" role="alert" style={{ margin: 0 }}>Prisijungti nepavyko arba jis buvo atšauktas. Bandykite dar kartą.</p>
+          <p className="banner warn" role="alert" style={{ margin: 0 }}>Prisijungti nepavyko arba nuoroda nebegalioja. Jei jau patvirtinote el. paštą, prisijunkite slaptažodžiu.</p>
         )}
         <LoginButtons next={next} />
-        {withUsername && (
+        {withEmail && (
           <>
             <p className="login-or"><span>arba</span></p>
-            <UsernameAuth next={next} />
+            <EmailAuth next={next} />
           </>
         )}
         <p className="login-legal">

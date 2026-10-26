@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { PASSWORD_MIN, authErrorText } from '@/lib/username'
+import { PASSWORD_MIN, authErrorText } from '@/lib/auth-text'
 
-export function ChangePassword() {
+export function ChangePassword({ title = 'Slaptažodžio keitimas', doneHref }: { title?: string; doneHref?: string }) {
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -20,14 +20,14 @@ export function ChangePassword() {
     const { error } = await createClient().auth.updateUser({ password })
     setBusy(false)
     if (error) return setMsg({ ok: false, text: authErrorText(error.code) })
+    if (doneHref) return window.location.assign(doneHref)
     form.reset()
     setMsg({ ok: true, text: 'Slaptažodis pakeistas.' })
   }
 
   return (
     <form className="form-section" onSubmit={submit} noValidate>
-      <h2>Slaptažodžio keitimas</h2>
-      <p className="hint">Pamiršto slaptažodžio atkurti negalima, todėl naująjį išsisaugokite.</p>
+      <h2>{title}</h2>
       <div className="fgrid">
         <label className="field"><span>Naujas slaptažodis</span>
           <input name="password" type="password" required minLength={PASSWORD_MIN} autoComplete="new-password" />

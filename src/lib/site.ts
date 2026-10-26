@@ -9,4 +9,6 @@ export const SITE = {
   address: '[buveinės adresas]',
   email: '[kontaktinis el. paštas]',
   listingDays: 60,
+  /** Įjungti, kai Supabase prijungta laiškų siuntimo paslauga (SMTP): be jos patvirtinimo laiškai žmonių nepasiekia. */
+  emailLogin: false,
 }

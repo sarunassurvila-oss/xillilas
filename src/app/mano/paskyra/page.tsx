@@ -10,7 +10,7 @@ import { getSessionUser } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: 'Profilis' }
 
-const PROVIDERS: Record<string, string> = { google: 'Google' }
+const PROVIDERS: Record<string, string> = { google: 'Google', email: 'el. paštą' }
 
 export default async function ProfilePage() {
   if (!isConfigured) return <SetupNotice />
@@ -24,11 +24,7 @@ export default async function ProfilePage() {
       <div className="page-head">
         <div>
           <h1>Profilis ir kontaktai</h1>
-          {user.username ? (
-            <p>Prisijungta slapyvardžiu <b>{user.username}</b>.</p>
-          ) : (
-            <p>Prisijungta per {PROVIDERS[user.provider] ?? user.provider} kaip <b>{user.email || 'paslėptas el. paštas'}</b>.</p>
-          )}
+          <p>Prisijungta per {PROVIDERS[user.provider] ?? user.provider} kaip <b>{user.email || 'paslėptas el. paštas'}</b>.</p>
         </div>
       </div>
       <div className="form">
@@ -37,7 +33,7 @@ export default async function ProfilePage() {
           phone={profile?.phone ?? ''}
           sellerKind={profile?.seller_kind === 'agency' ? 'agency' : 'private'}
         />
-        {user.username && <ChangePassword />}
+        {user.provider === 'email' && <ChangePassword />}
         <DeleteAccount uid={user.id} />
       </div>
     </div>

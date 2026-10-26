@@ -397,7 +397,7 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important } }
 
-/* Prisijungimas slapyvardžiu */
+/* Prisijungimas el. paštu */
 .login-or { display: flex; align-items: center; gap: 12px; color: var(--ink-3) !important; font-size: 13px }
 .login-or::before, .login-or::after { content: ""; flex: 1; border-top: 1px solid var(--line) }
 .name-auth { display: grid; gap: 14px; text-align: left }
@@ -405,3 +405,6 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .name-auth .seg span { text-align: center }
 .name-auth .btn { width: 100%; height: 48px }
 .name-auth .hint { margin: 0 }
+.name-auth .forgot { justify-self: center; font-size: 14px; color: var(--link) }
+.name-auth.sent { text-align: center; gap: 10px }
+.name-auth.sent h2 { font: 700 20px var(--font-display); margin: 0 }

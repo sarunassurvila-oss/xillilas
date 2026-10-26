@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         <h2>Kokius duomenis gauname</h2>
         <ul>
           <li><b>Prisijungiant per Google:</b> vardą, el. pašto adresą ir profilio nuotrauką. Google slaptažodžio nematome.</li>
-          <li><b>Kuriant paskyrą su slapyvardžiu:</b> slapyvardį ir slaptažodį. Slaptažodis saugomas tik užšifruotas (kaip maiša), todėl jo nematome net mes.</li>
+          <li><b>Kuriant paskyrą el. paštu:</b> el. pašto adresą ir slaptažodį. Slaptažodis saugomas tik užšifruotas (kaip maiša), todėl jo nematome net mes. Šiuo adresu siunčiame tik paskyros patvirtinimo ir slaptažodžio atkūrimo laiškus.</li>
           <li><b>Profilyje:</b> vardą ar įmonės pavadinimą, telefono numerį ir skelbėjo tipą.</li>
           <li><b>Skelbimuose:</b> objekto aprašymą, adresą, kainą, nuotraukas ir kontaktus, kuriuos patys įrašote. Šie duomenys yra vieši.</li>
           <li><b>Techniniai duomenys:</b> sesijos slapukai, būtini prisijungimui išlaikyti.</li>
