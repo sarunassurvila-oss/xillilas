@@ -21,15 +21,37 @@ jobs:
             echo "::notice title=Gatves::$body"
           }
           trap finish EXIT
-          echo "== data.gov.lt ==" >> out.txt
-          for u in "https://get.data.gov.lt/datasets/gov/rc/ar/:ns" "https://get.data.gov.lt/datasets/gov/rc/ar/gatve/:ns" "https://get.data.gov.lt/datasets/gov/rc/ar/gatve/Gatve?limit(2)"; do
-            echo "$u -> $(curl -sS -m 60 -o resp.txt -w '%{http_code}' "$u")" >> out.txt; head -c 600 resp.txt | tr '\n' ' ' >> out.txt; echo >> out.txt
-          done
-          echo "== registrucentras.lt ==" >> out.txt
-          for u in "https://www.registrucentras.lt/p/1194" "https://www.registrucentras.lt/p/1186"; do
-            echo "$u -> $(curl -sSL -m 60 -A 'Mozilla/5.0' -o page.html -w '%{http_code}' "$u")" >> out.txt
-            grep -oiE 'href="[^"]+"' page.html | grep -iE 'csv|zip|json|aduomen|adr_|gatv|atviri' | sort -u | head -40 >> out.txt
-          done
+          pip install -q osmium==4.0.2 > pip.log 2>&1 || pip install -q osmium > pip.log 2>&1 || echo "pyosmium: $(tail -2 pip.log)" >> out.txt
+          curl -sSL -m 600 -o lt.osm.pbf https://download.geofabrik.de/europe/lithuania-latest.osm.pbf
+          echo "pbf: $(du -h lt.osm.pbf | cut -f1)" >> out.txt
+          mkdir -p data/raw
+          cat > extract.py <<'PY'
+          import collections, osmium, sys
+          pairs = collections.Counter(); keys = collections.Counter()
+          class H(osmium.SimpleHandler):
+              def t(self, tags):
+                  st = tags.get('addr:street')
+                  if not st: return
+                  for k in tags:
+                      if k.k.startswith('addr:') or k.k == 'is_in': keys[k.k] += 1
+                  pairs[(tags.get('addr:city', ''), tags.get('addr:municipality', ''), st)] += 1
+              def node(self, n): self.t(n.tags)
+              def way(self, w): self.t(w.tags)
+              def relation(self, r): self.t(r.tags)
+          H().apply_file(sys.argv[1])
+          with open('data/raw/streets.tsv', 'w') as f:
+              for (c, m, s), n in sorted(pairs.items()):
+                  f.write(f"{c}\t{m}\t{s}\t{n}\n")
+          print('porų:', len(pairs), '; miestų:', len({c for c, _, _ in pairs}))
+          print('raktai:', keys.most_common(12))
+          for city in ('Vilnius', 'Kaunas', 'Avižieniai', 'Garliava', 'Nida'):
+              ss = sorted({s for (c, m, s) in pairs if c == city})
+              ms = collections.Counter(m for (c, m, s) in pairs if c == city).most_common(3)
+              print(city, len(ss), ss[:6], ms)
+          PY
+          sed -i 's/^          //' extract.py
+          python3 extract.py lt.osm.pbf >> out.txt 2>&1 || echo "extract klaida" >> out.txt
+          echo "tsv: $(wc -l < data/raw/streets.tsv 2>/dev/null) eil., $(du -h data/raw/streets.tsv 2>/dev/null | cut -f1)" >> out.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           mkdir -p data/raw && touch data/raw/.keep && git add data/raw && git commit -qm "Adresų registro duomenys: savivaldybės, gyvenvietės, gatvės" && git push -q origin HEAD:claude/streets-data && echo "Įkelta į šaką" >> out.txt || echo "Įkelti nepavyko" >> out.txt
