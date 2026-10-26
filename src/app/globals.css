@@ -158,12 +158,12 @@ select:disabled { opacity: .6 }
 .rooms span:hover { border-color: var(--ink-3) }
 .rooms input:checked + span { background: var(--brand); border-color: var(--brand); color: var(--brand-ink) }
 .rooms input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px }
-.f-submit { grid-column: 4; display: flex; gap: 8px }
-.f-submit .btn { height: 44px; font-size: 15px }
-.f-submit .btn-cta { flex: 1; min-width: 0 }
-.f-map { flex: none; gap: 6px; padding: 0 14px }
-.f-map .ico { width: 18px; height: 18px }
-@media (max-width: 980px) { .fields { grid-template-columns: repeat(2, minmax(0, 1fr)) } .f-submit { grid-column: 1 / -1 } }
+.f-submit { grid-column: 4 }
+.f-submit .btn { height: 44px; width: 100%; font-size: 15px }
+.search-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px }
+.seg-view span { display: inline-flex; align-items: center; gap: 6px }
+.seg-view .ico { width: 17px; height: 17px }
+@media (max-width: 980px) { .fields { grid-template-columns: repeat(2, minmax(0, 1fr)) } .f-submit { grid-column: auto } }
 @media (max-width: 560px) { .fields { grid-template-columns: minmax(0, 1fr) } .search { padding: 16px } }
 
 /* kategorijos */

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { DistrictPicker } from '@/components/DistrictPicker'
 import { Icon } from '@/components/icons'
 import { StreetInput } from '@/components/StreetInput'
@@ -42,6 +42,9 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
   const advCount = advancedCount(filters)
   const [advOpen, setAdvOpen] = useState(() => advOpenMemory)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  // Rodymo būdas perjungiamas iškart, nelaukiant serverio atsakymo.
+  const [view, setView] = useState(filters.view)
+  useEffect(() => setView(filters.view), [filters.view])
 
   // Visi Lietuvos miestai ir papildomai vietos, kurias skelbėjai įrašė patys.
   const extraCities = useMemo(
@@ -54,14 +57,14 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
     [locations, form.city],
   )
 
-  function go(next: Form, scroll = false, view = filters.view) {
+  function go(next: Form, scroll = false, nextView = view) {
     clearTimeout(timer.current)
     const qs = toQuery({
       deal: next.deal, type: next.type, city: next.city, districts: next.districts, q: next.q.trim(), rooms: next.rooms,
       ...(Object.fromEntries(NUMS.map((k) => [k, n(next[k])])) as Record<NumKey, number | null>),
       notFirst: next.notFirst, notLast: next.notLast, photos: next.photos, days: next.days ? Number(next.days) : null,
       energy: next.energy, purpose: next.purpose, building: next.building, heating: next.heating, finish: next.finish, features: next.features,
-      sort: filters.sort, view,
+      sort: filters.sort, view: nextView,
     })
     startTransition(() => {
       if (scroll) router.push(`/${qs ? `?${qs}` : ''}#rezultatai`)
@@ -105,9 +108,15 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
   return (
     <form className="search" action="/" method="get" role="search" aria-label="Skelbimų paieška"
       onSubmit={(e) => { e.preventDefault(); go(form, true) }}>
-      <div className="seg" role="radiogroup" aria-label="Sandorio tipas">
-        <label><input type="radio" name="deal" value="sale" checked={!rent} onChange={() => update({ deal: 'sale', pmin: '', pmax: '' })} /><span>Pirkti</span></label>
-        <label><input type="radio" name="deal" value="rent" checked={rent} onChange={() => update({ deal: 'rent', pmin: '', pmax: '' })} /><span>Nuomotis</span></label>
+      <div className="search-top">
+        <div className="seg" role="radiogroup" aria-label="Sandorio tipas">
+          <label><input type="radio" name="deal" value="sale" checked={!rent} onChange={() => update({ deal: 'sale', pmin: '', pmax: '' })} /><span>Pirkti</span></label>
+          <label><input type="radio" name="deal" value="rent" checked={rent} onChange={() => update({ deal: 'rent', pmin: '', pmax: '' })} /><span>Nuomotis</span></label>
+        </div>
+        <div className="seg seg-view" role="radiogroup" aria-label="Kaip rodyti rezultatus">
+          <label><input type="radio" name="view" value="list" checked={view !== 'map'} onChange={() => { setView('list'); go(form, true, 'list') }} /><span><Icon name="list" />Sąrašas</span></label>
+          <label><input type="radio" name="view" value="map" checked={view === 'map'} onChange={() => { setView('map'); go(form, true, 'map') }} /><span><Icon name="map" />Žemėlapis</span></label>
+        </div>
       </div>
       <div className="fields">
         <label className="field"><span>Kategorija</span>
@@ -166,11 +175,6 @@ export function SearchForm({ filters, locations, total }: { filters: Filters; lo
         <div className="f-submit">
           <button className="btn btn-cta" type="submit" disabled={pending}>
             {pending ? 'Ieškoma…' : total ? `Rodyti ${total} ${accWord(total)}` : 'Skelbimų nerasta'}
-          </button>
-          <button className="btn btn-ghost f-map" type="button" disabled={pending}
-            onClick={() => go(form, true, filters.view === 'map' ? 'list' : 'map')}>
-            <Icon name={filters.view === 'map' ? 'list' : 'map'} />
-            {filters.view === 'map' ? 'Sąraše' : 'Žemėlapyje'}
           </button>
         </div>
       </div>
