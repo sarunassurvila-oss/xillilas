@@ -105,6 +105,7 @@ jobs:
                 log "KLAIDA: migracija $(basename "$f") nepavyko: $(echo "$r" | jq -c '.message // .' | cut -c1-400)"; return
               fi
             done
+            log "Apsauga guard_password_accounts: $(q "select count(*) as n from pg_trigger where tgname = 'guard_password_accounts' and tgrelid = 'auth.users'::regclass" | jq -r 'if type == "array" and .[0].n == 1 then "įdiegta" else "NĖRA" end')"
             log "Stulpelis floor_is_last: $(q "select count(*) as n from information_schema.columns where table_schema = 'public' and table_name = 'listings' and column_name = 'floor_is_last'" | jq -r 'if type == "array" and .[0].n == 1 then "yra" else "NĖRA" end')"
 
             keys=$(curl -s "${H[@]}" "$API/projects/$REF/api-keys")
@@ -114,8 +115,8 @@ jobs:
             URL="https://$REF.supabase.co"
 
             a=$(curl -s "${H[@]}" -X PATCH "$API/projects/$REF/config/auth" \
-              -d "$(jq -n --arg s "$SITE" '{site_url: $s, uri_allow_list: ($s + "/auth/callback,http://localhost:3000/auth/callback"), external_email_enabled: false}')")
-            if [ "$(echo "$a" | jq -r '.site_url // empty')" = "$SITE" ]; then log "Prisijungimo adresai nustatyti ($SITE), registracija el. paštu išjungta: $([ "$(echo "$a" | jq -r '.external_email_enabled')" = false ] && echo taip || echo ne)"; else log "ĮSPĖJIMAS: prisijungimo adresų nustatyti nepavyko: $(echo "$a" | jq -c '.message // .' | cut -c1-200)"; fi
+              -d "$(jq -n --arg s "$SITE" '{site_url: $s, uri_allow_list: ($s + "/auth/callback,http://localhost:3000/auth/callback")}')")
+            if [ "$(echo "$a" | jq -r '.site_url // empty')" = "$SITE" ]; then log "Prisijungimo adresai nustatyti ($SITE). Slapyvardžių paskyros (keičiama Supabase skydelyje): $(echo "$a" | jq -r 'if .external_email_enabled and .mailer_autoconfirm then "įjungtos" elif .external_email_enabled then "el. paštas įjungtas, bet reikalauja patvirtinimo" else "išjungtos" end'), min. slaptažodžio ilgis: $(echo "$a" | jq -r '.password_min_length')"; else log "ĮSPĖJIMAS: prisijungimo adresų nustatyti nepavyko: $(echo "$a" | jq -c '.message // .' | cut -c1-200)"; fi
             GOOGLE_CLIENT_ID=$(printf '%s' "${GOOGLE_CLIENT_ID:-}" | tr -d '[:space:]')
             GOOGLE_CLIENT_SECRET=$(printf '%s' "${GOOGLE_CLIENT_SECRET:-}" | tr -d '[:space:]')
             if [ -n "$GOOGLE_CLIENT_ID" ] && [ -n "$GOOGLE_CLIENT_SECRET" ]; then
