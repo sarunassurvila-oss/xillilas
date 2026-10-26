@@ -33,6 +33,7 @@ jobs:
           echo "== Paleidimui =="
           echo "robots.txt: $(curl -s -o /dev/null -w '%{http_code}' "$SITE/robots.txt"), sitemap.xml: $(curl -s -o sm.xml -w '%{http_code}' "$SITE/sitemap.xml") ($(grep -o '<loc>' sm.xml | wc -l) adresai, skelbimų: $(grep -o '/skelbimas/' sm.xml | wc -l))"
           echo "og:image: $(grep -oE 'property="og:image" content="[^"]+' home.html | sed 's/.*content="//' | head -1) -> $(curl -s -o /dev/null -w '%{http_code}' "$SITE/og.png")"
+          echo "Gatvės: vilnius.json $(curl -s -o st.json -w '%{http_code}' "$SITE/streets/vilnius.json") ($(grep -o '"' st.json | wc -l) kabučių), kauno-r.json $(curl -s -o /dev/null -w '%{http_code}' "$SITE/streets/kauno-r.json")"
           echo "Statistika: $(grep -q '_vercel/insights' home.html && echo įdiegta || echo nerasta)"
           echo "Privatumo politika su įmonės duomenimis: $(curl -s "$SITE/privatumas" | grep -q 'Įmonės pavadinimas\]' && echo 'NE (dar šablonas)' || echo taip)"
           echo "== 2. Supabase =="
