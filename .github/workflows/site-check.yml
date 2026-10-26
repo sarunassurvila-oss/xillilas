@@ -102,7 +102,8 @@ jobs:
           const errs = []
           p.on('pageerror', (e) => errs.push(e.message))
           p.on('console', (m) => m.type() === 'error' && errs.push(m.text()))
-          await p.goto('https://xillilas.vercel.app/?view=map#rezultatai', { waitUntil: 'networkidle' })
+          await p.goto('https://xillilas.vercel.app/?view=map#rezultatai', { waitUntil: 'load' })
+          await p.locator('.lmap canvas').waitFor({ timeout: 30000 }).catch(() => {})
           const canvas = await p.locator('.lmap canvas').count()
           await p.waitForTimeout(4000)
           const prices = await p.locator('.mk-price').count(), clusters = await p.locator('.mk-cluster').count()
