@@ -13,8 +13,9 @@ export default async function NewListingPage() {
   if (!isConfigured) return <SetupNotice />
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/prisijungti?next=/mano/naujas')
-  const { data: profile } = await supabase.from('profiles').select('full_name,phone').eq('id', user.id).maybeSingle()
+  const { data: profile } = await supabase.from('profiles').select('full_name,phone,seller_kind').eq('id', user.id).maybeSingle()
 
+  const kind = profile?.seller_kind === 'agency' ? 'agency' : 'private'
   return (
     <div className="wrap narrow page">
       <p className="crumbs"><Link href="/mano">Mano skelbimai</Link> / Naujas</p>
@@ -24,7 +25,7 @@ export default async function NewListingPage() {
           <p>Paskelbtas skelbimas iškart matomas paieškoje ir galioja 60 dienų.</p>
         </div>
       </div>
-      <ListingForm uid={user.id} initial={emptyInput(profile?.full_name || user.name, profile?.phone ?? '')} />
+      <ListingForm uid={user.id} sellerKind={kind} initial={emptyInput(profile?.full_name || user.name, profile?.phone ?? '', kind)} />
     </div>
   )
 }

@@ -16,7 +16,7 @@ export default async function ProfilePage() {
   if (!isConfigured) return <SetupNotice />
   const { supabase, user } = await getSessionUser()
   if (!user) redirect('/prisijungti?next=/mano/paskyra')
-  const { data: profile } = await supabase.from('profiles').select('full_name,phone,seller_kind').eq('id', user.id).maybeSingle()
+  const { data: profile } = await supabase.from('profiles').select('full_name,phone,seller_kind,logo_path').eq('id', user.id).maybeSingle()
 
   return (
     <div className="wrap narrow page">
@@ -29,6 +29,8 @@ export default async function ProfilePage() {
       </div>
       <div className="form">
         <ProfileForm
+          uid={user.id}
+          logoPath={profile?.logo_path ?? null}
           fullName={profile?.full_name || user.name}
           phone={profile?.phone ?? ''}
           sellerKind={profile?.seller_kind === 'agency' ? 'agency' : 'private'}

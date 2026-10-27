@@ -41,13 +41,14 @@ async function resizeImage(file: File, max = 1600): Promise<Blob> {
 
 type Props = {
   uid: string
+  sellerKind: 'private' | 'agency'
   listingId?: number
   status?: EffectiveStatus
   initial: ListingInput
   photos?: ExistingPhoto[]
 }
 
-export function ListingForm({ uid, listingId, status, initial, photos = [] }: Props) {
+export function ListingForm({ uid, sellerKind, listingId, status, initial, photos = [] }: Props) {
   const router = useRouter()
   const [v, setV] = useState<ListingInput>(initial)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -402,10 +403,17 @@ export function ListingForm({ uid, listingId, status, initial, photos = [] }: Pr
       <fieldset className="form-section">
         <legend>Kontaktai</legend>
         <div className="fgrid">
-          <label className="field"><span>Vardas ar įmonė</span>
-            <input name="contact_name" autoComplete="name" value={v.contact_name} onChange={(e) => set('contact_name', e.target.value)} {...inv('contact_name')} />
-            {err('contact_name')}
-          </label>
+          {sellerKind === 'agency' ? (
+            <label className="field"><span>Įmonės pavadinimas</span>
+              <input name="contact_name" autoComplete="organization" value={v.contact_name} onChange={(e) => set('contact_name', e.target.value)} {...inv('contact_name')} />
+              {err('contact_name')}
+            </label>
+          ) : (
+            <div className="field"><span>Skelbėjas</span>
+              <p className="private-note">{v.deal === 'sale' ? 'Privatus pardavėjas' : 'Privatus nuomotojas'}</p>
+              <span className="hint">Jūsų vardas skelbime nerodomas. Įmonė? Pakeiskite <Link href="/mano/paskyra">profilyje</Link>.</span>
+            </div>
+          )}
           <label className="field"><span>Telefonas</span>
             <input name="contact_phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+370 6xx xxxxx" value={v.contact_phone} onChange={(e) => set('contact_phone', e.target.value)} {...inv('contact_phone')} />
             {err('contact_phone') ?? <span className="hint">Rodomas tik paspaudus „Rodyti numerį“.</span>}

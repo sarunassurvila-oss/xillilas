@@ -18,6 +18,9 @@ export function rowToInput(r: Row): ListingInput {
   }
 }
 
-export function emptyInput(contactName: string, contactPhone: string): ListingInput {
-  return rowToInput({ deal: 'sale', type: 'butas', contact_name: contactName, contact_phone: contactPhone })
+/** Privataus asmens vardas skelbime nerodomas: duomenų bazė jį vis tiek pakeičia į „Privatus asmuo“. */
+export const PRIVATE_NAME = 'Privatus asmuo'
+
+export function emptyInput(contactName: string, contactPhone: string, sellerKind: 'private' | 'agency' = 'private'): ListingInput {
+  return rowToInput({ deal: 'sale', type: 'butas', contact_name: sellerKind === 'private' ? PRIVATE_NAME : contactName, contact_phone: contactPhone })
 }

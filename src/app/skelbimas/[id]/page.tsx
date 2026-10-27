@@ -12,7 +12,7 @@ import { isConfigured } from '@/lib/env'
 import { hrefFor } from '@/lib/filters'
 import { googleMapsUrl } from '@/lib/geo'
 import {
-  TYPES, addrOf, daysLabel, daysSince, effectiveStatus, fmt, fmt1, fullTitle, photoUrl, priceLabel, statusLabel, unitLabel,
+  TYPES, addrOf, daysLabel, daysSince, effectiveStatus, fmt, fmt1, fullTitle, logoUrl, photoUrl, priceLabel, statusLabel, unitLabel,
   type Listing,
 } from '@/lib/listings'
 import { picture } from '@/lib/picture'
@@ -20,7 +20,7 @@ import { createClient, getSessionUser } from '@/lib/supabase/server'
 
 // contact_phone sąmoningai neįtrauktas: jį parodo PhoneReveal tik paspaudus.
 const DETAIL_COLUMNS =
-  'id,owner_id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,heating,finish,energy,purpose,features,description,contact_name,published_at,expires_at,lat,lng,listing_photos(path,position)'
+  'id,owner_id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,heating,finish,energy,purpose,features,description,contact_name,seller_kind,seller_logo,published_at,expires_at,lat,lng,listing_photos(path,position)'
 const CARD_COLUMNS =
   'id,status,deal,type,city,district,street,price,old_price,area,rooms,floor,floors,plot,year,building,energy,purpose,features,published_at,listing_photos(path,position)'
 
@@ -169,8 +169,20 @@ export default async function ListingPage({ params }: Props) {
 
         <aside className="d-side">
           <section className="box" aria-label="Kontaktai">
-            <p className="muted">{l.deal === 'sale' ? 'Pardavėjas' : 'Nuomotojas'}</p>
-            <p className="seller-name">{l.contact_name}</p>
+            {l.seller_kind === 'agency' ? (
+              <div className="seller">
+                {l.seller_logo && <img className="seller-logo" src={logoUrl(l.seller_logo)} alt="" />}
+                <div>
+                  <p className="muted">{l.deal === 'sale' ? 'Pardavėjas' : 'Nuomotojas'} · įmonė</p>
+                  <p className="seller-name">{l.contact_name}</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="muted">Kontaktai</p>
+                <p className="seller-name">{l.deal === 'sale' ? 'Privatus pardavėjas' : 'Privatus nuomotojas'}</p>
+              </>
+            )}
             <PhoneReveal listingId={l.id} />
           </section>
           {l.deal === 'sale' && ['butas', 'namas', 'sklypas'].includes(l.type) && <LoanCalculator price={l.price} />}

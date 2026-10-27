@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import type { SellerKind } from '@/components/LoginOptions'
 import { createClient } from '@/lib/supabase/client'
 
 function GoogleLogo() {
@@ -14,7 +15,7 @@ function GoogleLogo() {
   )
 }
 
-export function LoginButtons({ next }: { next: string }) {
+export function LoginButtons({ next, kind, touched }: { next: string; kind: SellerKind; touched: boolean }) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
 
@@ -24,7 +25,7 @@ export function LoginButtons({ next }: { next: string }) {
     const { error } = await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}&kind=${kind}${touched ? '&set=1' : ''}`,
         // Leidžia pasirinkti paskyrą, jei telefone ar naršyklėje jų kelios.
         queryParams: { prompt: 'select_account' },
       },

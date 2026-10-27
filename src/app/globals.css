@@ -500,3 +500,20 @@ input[type="range"] { height: 24px; padding: 0; border: 0; background: none; acc
 .sub-actions { display: flex; align-items: center; gap: 14px }
 .sub-actions .btn { height: 36px; font-size: 14px }
 .link-btn.danger { color: var(--danger) }
+
+/* Skelbėjo tipas ir logotipas */
+.kind-pick { display: grid; gap: 8px; text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2) }
+.kind-pick > span { font: 600 13px var(--font-body); color: var(--ink-2) }
+.kind-pick .seg { justify-self: stretch; display: grid; grid-template-columns: 1fr 1fr; background: var(--surface) }
+.kind-pick .seg span { text-align: center }
+.kind-pick .hint { margin: 0 }
+.seller { display: flex; align-items: center; gap: 12px }
+.seller-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 10px; border: 1px solid var(--line); background: #fff; flex: none }
+.logo-up { display: flex; align-items: center; gap: 16px; flex-wrap: wrap }
+.logo-img { width: 88px; height: 88px; object-fit: contain; border-radius: 12px; border: 1px solid var(--line); background: #fff; flex: none }
+.logo-empty { display: grid; place-items: center; color: var(--ink-3); font-size: 13px; border-style: dashed; background: var(--surface-2) }
+.logo-actions { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; flex: 1 1 240px }
+.logo-actions .btn { cursor: pointer }
+.logo-actions .is-busy { opacity: .7; cursor: progress }
+.logo-actions .hint { flex-basis: 100% }
+.private-note { margin: 0; height: 44px; display: flex; align-items: center; padding: 0 12px; border-radius: 8px; background: var(--surface-2); font-weight: 600 }

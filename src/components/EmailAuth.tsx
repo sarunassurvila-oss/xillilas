@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import type { SellerKind } from '@/components/LoginOptions'
 import { createClient } from '@/lib/supabase/client'
 import { PASSWORD_MIN, authErrorText, isValidEmail, normalizeEmail } from '@/lib/auth-text'
 
 // Prisijungiama tiesiai iš naršyklės: Supabase taip mato tikrą lankytojo IP ir riboja slaptažodžių spėliojimą.
-export function EmailAuth({ next }: { next: string }) {
+export function EmailAuth({ next, kind, touched }: { next: string; kind: SellerKind; touched: boolean }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
@@ -30,7 +31,7 @@ export function EmailAuth({ next }: { next: string }) {
     setUnconfirmed('')
     const auth = createClient().auth
     if (signup) {
-      const { data, error } = await auth.signUp({ email, password, options: { emailRedirectTo: callback() } })
+      const { data, error } = await auth.signUp({ email, password, options: { emailRedirectTo: callback(), data: { seller_kind: kind } } })
       setPending(false)
       if (error) return setError(authErrorText(error.code))
       // Supabase neatskleidžia, kad adresas užimtas: tokiu atveju grąžina naudotoją be prisijungimo būdų.
@@ -38,12 +39,14 @@ export function EmailAuth({ next }: { next: string }) {
       if (data.session) return window.location.assign(next)
       return setSentTo(email)
     }
-    const { error } = await auth.signInWithPassword({ email, password })
+    const { data, error } = await auth.signInWithPassword({ email, password })
     if (error) {
       setPending(false)
       if (error.code === 'email_not_confirmed') setUnconfirmed(email)
       return setError(authErrorText(error.code))
     }
+    // Esamai paskyrai tipas keičiamas tik jei jis čia sąmoningai pasirinktas.
+    if (touched) await createClient().from('profiles').update({ seller_kind: kind }).eq('id', data.user.id)
     // Pilnas perkrovimas, kad serveris iškart matytų naują sesiją.
     window.location.assign(next)
   }

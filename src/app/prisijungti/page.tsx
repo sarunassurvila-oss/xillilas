@@ -2,9 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Logo } from '@/components/icons'
-import { LoginButtons } from '@/components/LoginButtons'
+import { LoginOptions } from '@/components/LoginOptions'
 import { SetupNotice } from '@/components/SetupNotice'
-import { EmailAuth } from '@/components/EmailAuth'
 import { emailLoginEnabled } from '@/lib/auth-settings'
 import { isConfigured } from '@/lib/env'
 import { safeNext } from '@/lib/safe-next'
@@ -38,13 +37,7 @@ export default async function LoginPage({ searchParams }: Props) {
         {sp.klaida && (
           <p className="banner warn" role="alert" style={{ margin: 0 }}>Prisijungti nepavyko arba nuoroda nebegalioja. Jei jau patvirtinote el. paštą, prisijunkite slaptažodžiu.</p>
         )}
-        <LoginButtons next={next} />
-        {withEmail && (
-          <>
-            <p className="login-or"><span>arba</span></p>
-            <EmailAuth next={next} />
-          </>
-        )}
+        <LoginOptions next={next} withEmail={withEmail} />
         <p className="login-legal">
           Prisijungdami sutinkate su <Link href="/taisykles">naudojimosi taisyklėmis</Link> ir <Link href="/privatumas">privatumo politika</Link>.
           Jungiantis per Google, gauname tik jūsų vardą, el. pašto adresą ir profilio nuotrauką.

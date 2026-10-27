@@ -92,7 +92,7 @@ export async function saveProfile(_prev: ProfileState, form: FormData): Promise<
   const phone = String(form.get('phone') ?? '').trim()
   const seller_kind = form.get('seller_kind') === 'agency' ? 'agency' : 'private'
   const errors: Record<string, string> = {}
-  if (!full_name) errors.full_name = 'Įrašykite vardą arba įmonės pavadinimą.'
+  if (!full_name) errors.full_name = seller_kind === 'agency' ? 'Įrašykite įmonės pavadinimą.' : 'Įrašykite vardą.'
   if (phone && !PHONE_RE.test(phone)) errors.phone = 'Įrašykite telefono numerį, pvz. +370 612 34567.'
   if (Object.keys(errors).length) return { ok: false, message: 'Patikrinkite pažymėtus laukus.', errors }
 

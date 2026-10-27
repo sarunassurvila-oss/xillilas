@@ -43,7 +43,8 @@ export default async function EditListingPage({ params, searchParams }: Props) {
       {photoError && (
         <div className="banner warn" role="alert">Skelbimas išsaugotas, bet kai kurių nuotraukų įkelti nepavyko. Pridėkite jas dar kartą ir išsaugokite.</div>
       )}
-      <ListingForm uid={user.id} listingId={id} status={status} initial={rowToInput(data)} photos={listing.listing_photos} />
+      <ListingForm uid={user.id} listingId={id} status={status} sellerKind={listing.seller_kind === 'agency' ? 'agency' : 'private'}
+        initial={rowToInput(data)} photos={listing.listing_photos} />
     </div>
   )
 }

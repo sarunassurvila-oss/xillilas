@@ -39,6 +39,8 @@ export type Listing = {
   listing_photos?: Photo[]
   lat?: number | null
   lng?: number | null
+  seller_kind?: 'private' | 'agency'
+  seller_logo?: string | null
 }
 
 export const TYPES: Record<ListingType, { one: string; many: string }> = {
@@ -164,3 +166,5 @@ export function daysLeft(iso: string | null | undefined) {
   if (!iso) return 0
   return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 864e5))
 }
+export const LOGO_BUCKET = 'seller-logos'
+export const logoUrl = (path: string) => `${SUPABASE_URL}/storage/v1/object/public/${LOGO_BUCKET}/${path}`

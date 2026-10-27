@@ -13,8 +13,8 @@ export default function PrivacyPage() {
         <ul>
           <li><b>Prisijungiant per Google:</b> vardą, el. pašto adresą ir profilio nuotrauką. Google slaptažodžio nematome.</li>
           <li><b>Kuriant paskyrą el. paštu:</b> el. pašto adresą ir slaptažodį. Slaptažodis saugomas tik užšifruotas (kaip maiša), todėl jo nematome net mes. Šiuo adresu siunčiame tik paskyros patvirtinimo ir slaptažodžio atkūrimo laiškus.</li>
-          <li><b>Profilyje:</b> vardą ar įmonės pavadinimą, telefono numerį ir skelbėjo tipą.</li>
-          <li><b>Skelbimuose:</b> objekto aprašymą, adresą, kainą, nuotraukas ir kontaktus, kuriuos patys įrašote. Šie duomenys yra vieši.</li>
+          <li><b>Profilyje:</b> vardą ar įmonės pavadinimą, telefono numerį ir skelbėjo tipą (privatus asmuo ar įmonė). Įmonės gali įkelti logotipą – jis rodomas viešai šalia jų skelbimų.</li>
+          <li><b>Skelbimuose:</b> objekto aprašymą, adresą, kainą, nuotraukas ir telefono numerį (rodomas paspaudus). Šie duomenys yra vieši. Privataus asmens vardas skelbimuose nerodomas ir juose nesaugomas – rodoma „Privatus pardavėjas“; įmonių skelbimuose rodomas įmonės pavadinimas.</li>
           <li><b>Prenumeratose:</b> pasirinktus paieškos filtrus. Apie naujus tinkančius skelbimus rašome jūsų paskyros el. pašto adresu (laiškus siunčia Brevo). Atsisakyti galite kiekvieno laiško apačioje arba puslapyje „Prenumeratos“.</li>
           <li><b>Techniniai duomenys:</b> sesijos slapukai, būtini prisijungimui išlaikyti.</li>
         </ul>
