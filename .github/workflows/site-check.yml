@@ -47,6 +47,13 @@ jobs:
           ID=$(grep -oE '/skelbimas/[0-9]+' home.html | head -1)
           [ -n "$ID" ] && echo "Skelbimo $ID vietos žemėlapis: $(curl -s "$SITE$ID" | grep -q 'Vieta žemėlapyje' && echo yra || echo nėra)"
 
+          echo "== Skelbėjai =="
+          for id in $(grep -oE '/skelbimas/[0-9]+' home.html | sort -u | head -4); do
+            pg=$(curl -s "$SITE$id")
+            echo "$id: $(echo "$pg" | grep -oE 'Privatus (pardavėjas|nuomotojas)|· įmonė' | head -1 || echo '?'); vardas viešai: $(echo "$pg" | grep -o 'seller-name">[^<]*' | sed 's/seller-name">//' | head -1)"
+          done
+          echo "Prisijungimas: $(curl -s "$SITE/prisijungti" | grep -q 'Prisijungiu kaip' && echo 'pasirinkimas yra' || echo 'pasirinkimo NĖRA')"
+
           echo "== Prenumeratos =="
           echo "Mygtukas rezultatuose: $(grep -q 'Gauti naujus skelbimus el. paštu' home.html && echo yra || echo NĖRA)"
           echo "/prenumerata/atsisakyti: $(curl -s "$SITE/prenumerata/atsisakyti?t=00000000-0000-0000-0000-000000000000" | grep -o '<h1>[^<]*' | head -1 | sed 's/<h1>//')"
@@ -74,6 +81,7 @@ jobs:
             curl -s -o t.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/listings?select=id&limit=1" -H "apikey: $KEY"; head -c 200 t.json; echo
             echo "-- Stulpelis floor_is_last:"
             curl -s -o fl.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/listings?select=id,floor_is_last&limit=1" -H "apikey: $KEY"; head -c 200 fl.json; echo
+            echo "-- API: privačių skelbimų vardai: $(curl -s "$URL/rest/v1/listings?select=contact_name&seller_kind=eq.private" -H "apikey: $KEY" | grep -o '"contact_name":"[^"]*"' | sort | uniq -c | tr '\n' ' ')"
             echo "-- Funkcija listing_type_counts:"
             curl -s -o f.json -w 'HTTP %{http_code}\n' "$URL/rest/v1/rpc/listing_type_counts?p_deal=sale" -H "apikey: $KEY"; head -c 200 f.json; echo
             echo "-- Prisijungimo tiekėjai:"
