@@ -151,6 +151,7 @@ jobs:
               log "Prenumeratų laiškai: GitHub'e dar nėra BREVO_API_KEY (laiškai kaupiami eilėje iki paros)"
             fi
             log "Prenumeratų užduotis kas minutę: $(q "select count(*) as n from cron.job where jobname = 'listing-alerts' and active" | jq -r 'if type == "array" and .[0].n == 1 then "veikia" else "NĖRA" end'); prenumeratų: $(q "select count(*) as n from public.saved_searches" | jq -r '.[0].n // "?"'); laiškų (išsiųsta/laukia/klaidos): $(q "select count(*) filter (where status = 'sent') || '/' || count(*) filter (where status in ('pending','sending')) || '/' || count(*) filter (where status = 'failed') as n from public.alert_outbox" | jq -r '.[0].n // "?"')"
+            log "Rolė postgres apeina RLS: $(q "select rolbypassrls::text as r from pg_roles where rolname = 'postgres'" | jq -r '.[0].r // "?"'); skelbimai (privatūs su paslėptu vardu / įmonių): $(q "select count(*) filter (where seller_kind = 'private' and contact_name = 'Privatus asmuo') || ' / ' || count(*) filter (where seller_kind = 'agency') as n from public.listings" | jq -r '.[0].n // "?"'); prenumeratų eilėje: $(q "select count(*) as n from public.listing_alert_queue" | jq -r '.[0].n // "?"')"
             log "Stulpelis floor_is_last: $(q "select count(*) as n from information_schema.columns where table_schema = 'public' and table_name = 'listings' and column_name = 'floor_is_last'" | jq -r 'if type == "array" and .[0].n == 1 then "yra" else "NĖRA" end')"
 
             keys=$(curl -s "${H[@]}" "$API/projects/$REF/api-keys")
